@@ -1,0 +1,7 @@
+CREATE_KYC_PROFILE_SUCCESS = 'Success: KYC documents uploaded successfully!'
+CREATE_KYC_PROFILE_FAIL = 'Error: KYC documents not uploaded!'
+GET_KYC_PROFILE_SUCCESS = 'Success: Fetched KYC details submitted successfully!'
+GET_KYC_PROFILE_FAIL = 'Error: Could not fetch KYC details submitted!'
+UPDATE_KYC_PROFILE_SUCCESS = 'Success: Updated KYC details submitted successfully!'
+UPDATE_KYC_PROFILE_FAIL = 'Error: Could not update KYC details submitted!'
+DELETE_KYC_PROFILE_SUCCESS = 'Success: KYC documents deleted successfully!'
