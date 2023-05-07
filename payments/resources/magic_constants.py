@@ -1,8 +1,0 @@
-GET_PAYMENT_STATUS_SUCCESS = "Payment status returned successfully"
-USER_ID_API_KEY_MISMATCH = "Supplied API Key and User Id do not match"
-CREATE_PAYMENT_SUCCESS = "Payment Id created successfully"
-CREATE_PAYMENT_FAIL = "Payment Id could not be created"
-EXCEPTION_OCCURRED = "Exception! PLease check error"
-GET_PAYMENT_LIST_SUCCESS = "Payment List for given User Id fetched successfully"
-GET_PAYMENT_SESSION_LIST_SUCCESS = "Payment Session for given Payment Id fetched successfully"
-CREATE_PAYMENT_SESSION_SUCCESS = "Payment Session Id created successfully"

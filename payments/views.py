@@ -20,7 +20,7 @@ import datetime
 from django.utils import timezone
 import base64
 from .apps import logger
-from .resources.magic_constants import (
+from .resources.constants import (
     GET_PAYMENT_STATUS_SUCCESS, USER_ID_API_KEY_MISMATCH,
     CREATE_PAYMENT_SUCCESS, CREATE_PAYMENT_FAIL, EXCEPTION_OCCURRED,
     GET_PAYMENT_LIST_SUCCESS, GET_PAYMENT_SESSION_LIST_SUCCESS,
