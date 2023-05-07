@@ -1,0 +1,7 @@
+GET_API_KEYS_SUCCESS = "API Keys retrieved successfully"
+USER_ID_AUTH_ID_MISMATCH = "You are not allowed to make this change"
+CREATE_APIKEY_SUCCESS = "API Key created successfully"
+CREATE_APIKEY_FAIL = "API Key creation failed"
+EXCEPTION_OCCURRED = "Exception! PLease check error"
+DELETE_API_KEY_SUCCESS = "API Key deleted successfully"
+DELETE_API_KEY_FAIL = "API Key could not be deleted"
