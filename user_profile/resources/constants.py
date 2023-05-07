@@ -1,0 +1,6 @@
+PROFILE_DOES_NOT_EXIST = "Profile does not exist for this user id"
+GET_PROFILE_SUCCESS = "Successfully fetched profile"
+CREATE_PROFILE_FAIL = "Profile could not be created"
+UPDATE_PROFILE_FAIL = "Profile could not be updated"
+DELETE_PROFILE_SUCCESS = "Profile deleted successfully"
+DELETE_PROFILE_FAIL = "Profile could not be deleted"
