@@ -9,4 +9,4 @@ class APIKey(PrimaryUUIDTimeStampedModel):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="api_keys")
 
     def __str__(self):
-        return str(self.id) + "::" + str(self.user)
+        return f"APIKey::{str(self.id)}::::UserId::{str(self.user)}"
