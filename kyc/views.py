@@ -9,7 +9,9 @@ from .serializers import KYCProfileSerializer, KYCProviderSerializer, \
 from .constants import (
     CREATE_KYC_PROFILE_SUCCESS, CREATE_KYC_PROFILE_FAIL, GET_KYC_PROFILE_SUCCESS,
     GET_KYC_PROFILE_FAIL, UPDATE_KYC_PROFILE_SUCCESS, UPDATE_KYC_PROFILE_FAIL,
-    DELETE_KYC_PROFILE_SUCCESS)
+    DELETE_KYC_PROFILE_SUCCESS, DELETE_KYC_PROFILE_FAIL, CREATE_POLYGON_ID_SUCCESS,
+    CREATE_POLYGON_ID_FAIL, API_KEY_INVALID, API_KEY_NOT_FOUND,
+    CREATE_KYC_PROFILE_REQUIRED_SCHEMA_SUCCESS, CREATE_KYC_PROFILE_REQUIRED_SCHEMA_FAIL)
 
 
 class KYCProviderListCreate(generics.ListCreateAPIView):
@@ -30,75 +32,100 @@ class KYCProfileGetCreateUpdateDelete(generics.GenericAPIView):
     permission_classes = [IsAuthenticated, ]
 
     def get(self, request):
-        response = dict(data={}, message="", error="")
+        response = dict(data=dict(), message="", error="")
+
         try:
             user_id = self.request.user.id
             queryset = KYCProfile.objects.get(user=user_id)
-
             serializer = self.serializer_class(queryset)
             data = serializer.data
             response['data'] = data
             response['message'] = GET_KYC_PROFILE_SUCCESS
             # logger.info(response)
             return Response(response, status=status.HTTP_200_OK)
-        except:
+
+        except Exception as e:
             response['message'] = GET_KYC_PROFILE_FAIL
+            response['error'] = str(e)
             # logger.info(response)
             return Response(response, status=status.HTTP_200_OK)
 
     def post(self, request):
-        response = dict(data={}, message="", error="")
-        user_id = self.request.user.id
-        request.data['user'] = user_id
+        response = dict(data=dict(), message="", error="")
 
-        # KYC Provider - synaps as default
-        kyc_provider_obj = KYCProvider.objects.get(name='Synaps')
-        request.data['kyc_provider'] = kyc_provider_obj.id
+        try:
+            user_id = self.request.user.id
+            request.data['user'] = user_id
 
-        # kyc_verification_provider
-        request.data['kyc_verification_status'] = 'Pending'
+            # KYC Provider - synaps as default
+            kyc_provider_obj = KYCProvider.objects.get(name='Synaps')
+            request.data['kyc_provider'] = kyc_provider_obj.id
 
-        serializer = self.serializer_class(data=request.data)
+            # kyc_verification_provider
+            request.data['kyc_verification_status'] = 'Pending'
 
-        if serializer.is_valid():
-            serializer.save()
-            data = serializer.data
-            response['data'] = data
-            response['message'] = CREATE_KYC_PROFILE_SUCCESS
+            serializer = self.serializer_class(data=request.data)
 
-            # logger.info(response)
-            return Response(response, status=status.HTTP_200_OK)
-        response['message'] = CREATE_KYC_PROFILE_FAIL
-        response['error'] = serializer.errors
-        # logger.error(response['error'])
-        return Response(response, status=status.HTTP_400_BAD_REQUEST)
+            if serializer.is_valid():
+                serializer.save()
+                data = serializer.data
+                response['data'] = data
+                response['message'] = CREATE_KYC_PROFILE_SUCCESS
+
+                # logger.info(response)
+                return Response(response, status=status.HTTP_200_OK)
+            response['message'] = CREATE_KYC_PROFILE_FAIL
+            response['error'] = serializer.errors
+            # logger.error(response['error'])
+            return Response(response, status=status.HTTP_400_BAD_REQUEST)
+
+        except Exception as e:
+            response['message'] = CREATE_KYC_PROFILE_FAIL
+            response['error'] = str(e)
+            return Response(response, status=status.HTTP_400_BAD_REQUEST)
 
     def put(self, request):
-        response = dict(data={}, message="", error="")
-        user_id = self.request.user.id
-        profile_obj = KYCProfile.objects.get(user=user_id)
-        serializer = self.serializer_class(profile_obj, data=request.data)
+        response = dict(data=dict(), message="", error="")
 
-        if serializer.is_valid():
-            serializer.save()
-            data = serializer.data
-            response['data'] = data
-            # logger.info(response)
-            response['message'] = UPDATE_KYC_PROFILE_SUCCESS
-            return Response(response, status=status.HTTP_200_OK)
-        response['message'] = UPDATE_KYC_PROFILE_FAIL
-        response['error'] = serializer.errors
-        # logger.error(response['error'])
-        return Response(response, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            user_id = self.request.user.id
+            profile_obj = KYCProfile.objects.get(user=user_id)
+            serializer = self.serializer_class(profile_obj, data=request.data)
+
+            if serializer.is_valid():
+                serializer.save()
+                data = serializer.data
+                response['data'] = data
+                # logger.info(response)
+                response['message'] = UPDATE_KYC_PROFILE_SUCCESS
+                return Response(response, status=status.HTTP_200_OK)
+            response['message'] = UPDATE_KYC_PROFILE_FAIL
+            response['error'] = serializer.errors
+            # logger.error(response['error'])
+            return Response(response, status=status.HTTP_400_BAD_REQUEST)
+
+        except Exception as e:
+            response['message'] = UPDATE_KYC_PROFILE_FAIL
+            response['error'] = str(e)
+            # logger.error(response['error'])
+            return Response(response, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request):
-        response = dict(data={}, message="", error="")
-        user_id = self.request.user.id
-        profile_obj = KYCProfile.objects.get(user=user_id)
-        profile_obj.delete()
-        response['message'] = DELETE_KYC_PROFILE_SUCCESS
-        # logger.info(response)
-        return Response(response, status=status.HTTP_200_OK)
+        response = dict(data=dict(), message="", error="")
+
+        try:
+            user_id = self.request.user.id
+            profile_obj = KYCProfile.objects.get(user=user_id)
+            profile_obj.delete()
+            response['message'] = DELETE_KYC_PROFILE_SUCCESS
+            # logger.info(response)
+            return Response(response, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            response['message'] = DELETE_KYC_PROFILE_FAIL
+            response['error'] = str(e)
+            # logger.info(response)
+            return Response(response, status=status.HTTP_200_OK)
 
 
 class KYCProviderClaimRequestListUpdate(generics.GenericAPIView):
@@ -106,7 +133,8 @@ class KYCProviderClaimRequestListUpdate(generics.GenericAPIView):
     permission_classes = [AllowAny]
 
     def get(self, request):
-        response = dict(data={}, message="", error="")
+        response = dict(data=dict(), message="", error="")
+
         try:
             kyc_provider = request.query_params.get('kyc_provider')
             kyc_provider_obj = KYCProvider.objects.get(name=kyc_provider)
@@ -120,17 +148,17 @@ class KYCProviderClaimRequestListUpdate(generics.GenericAPIView):
             response['message'] = GET_KYC_PROFILE_SUCCESS
             # logger.info(response)
             return Response(response, status=status.HTTP_200_OK)
+
         except Exception as e:
             response['message'] = GET_KYC_PROFILE_FAIL
-            print(e)
+            response['error'] = str(e)
             # logger.info(response)
-            return Response(response, status=status.HTTP_200_OK)
+            return Response(response, status=status.HTTP_400_BAD_REQUEST)
 
     def post(self, request):
         response = dict(data={}, message="", error="")
 
         # KYC Provider - synaps as default
-
         try:
             kyc_profile_obj = KYCProfile.objects.get(id=request.data.get('id'))
             kyc_verification_status = request.data.get('kyc_verification_status')
@@ -139,17 +167,17 @@ class KYCProviderClaimRequestListUpdate(generics.GenericAPIView):
             request.data['kyc_verification_status'] = kyc_profile_obj.kyc_verification_status
             response['data'] = request.data
             response['message'] = CREATE_KYC_PROFILE_SUCCESS
-            #     # logger.info(response)
+            # logger.info(response)
             return Response(response, status=status.HTTP_200_OK)
+
         except Exception as e:
-            print(e)
             response['message'] = CREATE_KYC_PROFILE_FAIL
-            response['error'] = ''
+            response['error'] = str(e)
             # logger.error(response['error'])
             return Response(response, status=status.HTTP_200_OK)
 
     # def put(self, request):
-    #     response = dict(data={}, message="", error="")
+    #     response = dict(data=dict(), message="", error="")
     #     kyc_profile_id = self.request.data.get('id')
     #     print('kyc_profile_id:', kyc_profile_id)
     #     profile_obj = KYCProfile.objects.get(id=kyc_profile_id)
@@ -174,7 +202,8 @@ class KYCProfilePolygonIdGetCreateUpdateDelete(generics.GenericAPIView):
     permission_classes = [AllowAny, ]
 
     def get(self, request):
-        response = dict(data={}, message="", error="")
+        response = dict(data=dict(), message="", error="")
+
         try:
             kyc_profile_id = self.request.query_params.get('id')
             queryset = KYCProfilePolygonId.objects.filter(kyc_profile=kyc_profile_id)
@@ -186,55 +215,76 @@ class KYCProfilePolygonIdGetCreateUpdateDelete(generics.GenericAPIView):
             response['message'] = GET_KYC_PROFILE_SUCCESS
             # logger.info(response)
             return Response(response, status=status.HTTP_200_OK)
+
         except Exception as e:
             response['message'] = GET_KYC_PROFILE_FAIL
-            response['message'] = str(e)
+            response['error'] = str(e)
             # logger.info(response)
             return Response(response, status=status.HTTP_200_OK)
 
     def post(self, request):
-        response = dict(data={}, message="", error="")
-        serializer = self.serializer_class(data=request.data)
+        response = dict(data=dict(), message="", error="")
 
-        if serializer.is_valid():
-            serializer.save()
-            data = serializer.data
-            response['data'] = data
-            response['message'] = 'CREATE_POLYGON_ID_RESPONSE_SUCCESS'
+        try:
+            serializer = self.serializer_class(data=request.data)
 
-            # logger.info(response)
+            if serializer.is_valid():
+                serializer.save()
+                data = serializer.data
+                response['data'] = data
+                response['message'] = CREATE_POLYGON_ID_SUCCESS
+
+                # logger.info(response)
+                return Response(response, status=status.HTTP_200_OK)
+            response['message'] = CREATE_POLYGON_ID_FAIL
+            response['error'] = serializer.errors
+            # logger.error(response['error'])
             return Response(response, status=status.HTTP_200_OK)
-        response['message'] = 'CREATE_POLYGON_ID_RESPONSE_FAIL'
-        response['error'] = serializer.errors
-        # logger.error(response['error'])
-        return Response(response, status=status.HTTP_200_OK)
+        except Exception as e:
+            response['message'] = CREATE_POLYGON_ID_FAIL
+            response['error'] = str(e)
+            return Response(response, status=status.HTTP_400_BAD_REQUEST)
 
     def put(self, request):
-        response = dict(data={}, message="", error="")
-        kyc_profile_id = self.request.data.get('id')
-        polygon_id_obj = KYCProfilePolygonId.objects.get(kyc_profile=kyc_profile_id)
-        serializer = self.serializer_class(polygon_id_obj, data=request.data)
+        response = dict(data=dict(), message="", error="")
 
-        if serializer.is_valid():
-            serializer.save()
-            data = serializer.data
-            response['data'] = data
-            # logger.info(response)
-            response['message'] = UPDATE_KYC_PROFILE_SUCCESS
-            return Response(response, status=status.HTTP_200_OK)
-        response['message'] = UPDATE_KYC_PROFILE_FAIL
-        response['error'] = serializer.errors
-        # logger.error(response['error'])
-        return Response(response, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            kyc_profile_id = self.request.data.get('id')
+            polygon_id_obj = KYCProfilePolygonId.objects.get(kyc_profile=kyc_profile_id)
+            serializer = self.serializer_class(polygon_id_obj, data=request.data)
+
+            if serializer.is_valid():
+                serializer.save()
+                data = serializer.data
+                response['data'] = data
+                # logger.info(response)
+                response['message'] = UPDATE_KYC_PROFILE_SUCCESS
+                return Response(response, status=status.HTTP_200_OK)
+            response['message'] = UPDATE_KYC_PROFILE_FAIL
+            response['error'] = serializer.errors
+            # logger.error(response['error'])
+            return Response(response, status=status.HTTP_400_BAD_REQUEST)
+
+        except Exception as e:
+            response['message'] = UPDATE_KYC_PROFILE_FAIL
+            response['error'] = str(e)
+            return Response(response, status=status.HTTP_400_BAD_REQUEST)
 
     # def delete(self, request):
-    #     response = dict(data={}, message="", error="")
-    #     user_id = self.request.user.id
-    #     profile_obj = KYCProfile.objects.get(user=user_id)
-    #     profile_obj.delete()
-    #     response['message'] = DELETE_KYC_PROFILE_SUCCESS
-    #     # logger.info(response)
-    #     return Response(response, status=status.HTTP_200_OK)
+    #     response = dict(data=dict(), message="", error="")
+    #
+    #     try:
+    #         user_id = self.request.user.id
+    #         profile_obj = KYCProfile.objects.get(user=user_id)
+    #         profile_obj.delete()
+    #         response['message'] = DELETE_KYC_PROFILE_SUCCESS
+    #         # logger.info(response)
+    #         return Response(response, status=status.HTTP_200_OK)
+    #
+    #     except Exception as e:
+    #         response['message'] = DELETE_KYC_PROFILE_FAIL
+    #         response['error'] = str(e)
+    #         return Response(response, status=status.HTTP_400_BAD_REQUEST)
 
 
 class KYCProfileRequiredSchemaView(generics.GenericAPIView):
@@ -242,14 +292,15 @@ class KYCProfileRequiredSchemaView(generics.GenericAPIView):
     permission_classes = [AllowAny, ]
 
     def get(self, request):
-        response = dict(data={}, message="", error="")
-        api_key = request.query_params.get('api_key', None)
+        response = dict(data=dict(), message="", error="")
 
         # Validate api_key and user_id
         try:
+            api_key = request.query_params.get('api_key', None)
             api_key_in_db = APIKey.objects.filter(id=api_key)
             if len(api_key_in_db) == 0:
-                return Response("No API Key found for this User id", status=status.HTTP_200_OK)
+                response['message'] = API_KEY_NOT_FOUND
+                return Response(response, status=status.HTTP_200_OK)
 
             user_id_for_api_key_in_db = api_key_in_db[0].user.id
 
@@ -263,27 +314,28 @@ class KYCProfileRequiredSchemaView(generics.GenericAPIView):
 
         except Exception as e:
             response['message'] = GET_KYC_PROFILE_FAIL
-            response['message'] = str(e)
+            response['error'] = str(e)
             # logger.info(response)
-            return Response(response, status=status.HTTP_200_OK)
+            return Response(response, status=status.HTTP_400_BAD_REQUEST)
 
     def post(self, request):
-        response = dict(data={}, message="", error="")
-        serializer = self.serializer_class(data=request.data)
+        response = dict(data=dict(), message="", error="")
 
-        if serializer.is_valid():
-            serializer.save()
-            data = serializer.data
-            response['data'] = data
-            response['message'] = 'CREATE_KYC_PROFILE_REQUIRED_SCHEMA_SUCCESS'
-
-            # logger.info(response)
+        try:
+            serializer = self.serializer_class(data=request.data)
+            if serializer.is_valid():
+                serializer.save()
+                data = serializer.data
+                response['data'] = data
+                response['message'] = CREATE_KYC_PROFILE_REQUIRED_SCHEMA_SUCCESS
+                # logger.info(response)
+                return Response(response, status=status.HTTP_200_OK)
+            response['message'] = CREATE_KYC_PROFILE_REQUIRED_SCHEMA_FAIL
+            response['error'] = serializer.errors
+            # logger.error(response['error'])
             return Response(response, status=status.HTTP_200_OK)
-        response['message'] = 'CREATE_KYC_PROFILE_REQUIRED_SCHEMA_FAIL'
-        response['error'] = serializer.errors
-        # logger.error(response['error'])
-        return Response(response, status=status.HTTP_200_OK)
 
-
-
-
+        except Exception as e:
+            response['message'] = CREATE_KYC_PROFILE_REQUIRED_SCHEMA_FAIL
+            response['error'] = str(e)
+            return Response(response, status=status.HTTP_400_BAD_REQUEST)
