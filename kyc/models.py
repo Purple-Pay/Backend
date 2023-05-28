@@ -8,7 +8,7 @@ class KYCProvider(PrimaryUUIDTimeStampedModel):
     name = models.CharField(_('name'), max_length=30, blank=True, null=True)   # Synaps, Idify
 
     def __str__(self):
-        return str(self.id) + "::" + self.name
+        return f"Id::{str(self.id)}::::Name::{str(self.name)}"
 
 
 class KYCProfile(PrimaryUUIDTimeStampedModel):
@@ -22,7 +22,7 @@ class KYCProfile(PrimaryUUIDTimeStampedModel):
     kyc_provider = models.ForeignKey(KYCProvider, on_delete=models.CASCADE, related_name="kyc_profile")
 
     def __str__(self):
-        return str(self.id) + "::" + str(self.user) + "::" + self.first_name
+        return f"ProfileId::{str(self.id)}::::UserId::{str(self.user)}::Name::{str(self.first_name)}"
 
 
 class KYCProfilePolygonId(PrimaryUUIDTimeStampedModel):
@@ -31,7 +31,7 @@ class KYCProfilePolygonId(PrimaryUUIDTimeStampedModel):
     polygon_id_offer_qr_code_response = models.JSONField()
 
     def __str__(self):
-        return str(self.id) + "::" + str(self.kyc_profile)
+        return f"PolygonId::{str(self.id)}::::KYCProfileId::{str(self.kyc_profile)}"
 
 
 class KYCProfileRequiredSchema(PrimaryUUIDTimeStampedModel):
@@ -39,4 +39,4 @@ class KYCProfileRequiredSchema(PrimaryUUIDTimeStampedModel):
     schema_id = models.CharField(_('schema id'), max_length=1000, blank=True, null=True)
 
     def __str__(self):
-        return str(self.id) + "::" + str(self.user) + "::" + str(self.schema_id)
+        return f"Id::{str(self.id)}::::UserId::{str(self.user)}::SchemaId::{str(self.schema_id)}"
