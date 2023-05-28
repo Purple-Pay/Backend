@@ -1,14 +1,22 @@
 from authentication.resources.constants import (
     VERIFICATION_EMAIL_BODY, VERIFICATION_EMAIL_SUBJECT,
     VERIFICATION_SUCCESS, VERIFICATION_ACTIVATION_EXPIRED,
-    VERIFICATION_INVALID_TOKEN, USER_REGISTRATION_SUCCESSFUL,
+    VERIFICATION_INVALID_TOKEN, USER_REGISTRATION_SUCCESS, USER_REGISTRATION_FAIL,
+    AUTH_SUCCESS, AUTH_FAIL_INVALID_CREDENTIALS, AUTH_FAIL,
+    AUTH_FAIL_USER_INACTIVE, AUTH_FAIL_EMAIL_NOT_VERIFIED,
+    AUTH_FAIL_USER_CREATOR_VERIFICATION_PENDING, LOGOUT_SUCCESS, LOGOUT_FAIL, RESET_PASSWORD_FAIL,
     INVALID_USER, APP_SCHEME, WRONG_AUTH_PROVIDER_MESSAGE, AUTH_PROVIDERS,
-    HTTP, HTTPS, HOST_LOCAL, HOST_GLOBAL, HOST_GLOBAL_FRONTEND, RESET_PASSWORD_PATH, RESET_PASSWORD_MESSAGE,
+    HTTP, HTTPS, HOST_LOCAL,
+    HOST_GLOBAL_BACKEND_DEV, HOST_GLOBAL_FRONTEND_DEV,
+    HOST_GLOBAL_BACKEND_STAGING, HOST_GLOBAL_FRONTEND_STAGING,
+    HOST_GLOBAL_BACKEND_PROD, HOST_GLOBAL_FRONTEND_PROD,
+    RESET_PASSWORD_PATH, RESET_PASSWORD_MESSAGE,
     RESET_PASSWORD_EMAIL_SUBJECT, NO_USER_REGISTERED_WITH_EMAIL,
     RESET_PASSWORD_LINK_SENT_MESSAGE, USER_NOT_RECOGNISED, INVALID_TOKEN,
     VALID_TOKEN_PASSWORD_RESET, INVALID_RESET_PASSWORD_LINK,
     RESET_PASSWORD_SUCCESS, RESET_PASSWORD_FAIL_WRONG_AUTH_PROVIDER,
-    INCORRECT_PASSWORD, CHANGE_PASSWORD_SUCCESS
+    INCORRECT_PASSWORD, CHANGE_PASSWORD_SUCCESS, CHANGE_PASSWORD_FAIL, FETCH_USER_DETAILS_SUCCESS,
+    FETCH_USER_DETAILS_FAIL
 )
 from rest_framework import generics, status, views, permissions
 from .serializers import (
@@ -46,13 +54,20 @@ class UserDetails(generics.GenericAPIView):
     permission_classes = [permissions.IsAuthenticated, ]
 
     def get(self, request):
-        response = dict(data={}, message="", error="")
-        user_id = request._auth.payload.get('user_id', None)
-        user_data = User.objects.get(id=user_id)
-        logger.info(user_data)
-        response['data'] = {'email': user_data.email}
-        response['message'] = 'Successfully retrieved user email'
-        return Response(response, status=status.HTTP_200_OK)
+        response = dict(data=dict(), message="", error="")
+
+        try:
+            user_id = request._auth.payload.get('user_id', None)
+            user_data = User.objects.get(id=user_id)
+            logger.info(user_data)
+            response['data'] = {'email': user_data.email}
+            response['message'] = FETCH_USER_DETAILS_SUCCESS
+            return Response(response, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            response['message'] = FETCH_USER_DETAILS_FAIL
+            response['error'] = str(e)
+            return Response(response, status=status.HTTP_400_BAD_REQUEST)
 
 
 # Completed: Working as expected
@@ -61,27 +76,36 @@ class RegisterView(generics.GenericAPIView):
     renderer_classes = (UserRenderer,)
 
     def post(self, request):
-        response = dict(data={}, message="", error="")
-        request_data = request.data
-        serializer = self.serializer_class(data=request_data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        user_data = serializer.data
+        response = dict(data=dict(), message="", error="")
+        try:
+            request_data = request.data
+            serializer = self.serializer_class(data=request_data)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            user_data = serializer.data
 
-        user_obj = User.objects.get(email=user_data['email'])
-        token = RefreshToken.for_user(
-            user_obj).access_token  # Adds token to outstanding token list and provides access_token
+            user_obj = User.objects.get(email=user_data['email'])
+            token = RefreshToken.for_user(
+                user_obj).access_token  # Adds token to outstanding token list and provides access_token
 
-        verify_absolute_url = HOST_GLOBAL_FRONTEND + "email/verify/?token=" + str(token)
+            verify_absolute_url = HOST_GLOBAL_FRONTEND_STAGING + "email/verify/?token=" + str(token)
 
-        email_body = VERIFICATION_EMAIL_BODY + verify_absolute_url
-        email_data = {'email_body': email_body, 'to_email': user_obj.email,
-                      'email_subject': VERIFICATION_EMAIL_SUBJECT}
-        Util.send_email(email_data)
-        response['data'] = {'email': user_obj.email}
-        response['message'] = USER_REGISTRATION_SUCCESSFUL,
-        logger.info(response)
-        return Response(response, status=status.HTTP_201_CREATED)
+            # email_body = VERIFICATION_EMAIL_BODY + verify_absolute_url
+            email_body = render_to_string('index.html', {'url': verify_absolute_url})
+            email_data = {'email_body': email_body, 'to_email': user_obj.email,
+                          'email_subject': VERIFICATION_EMAIL_SUBJECT}
+            Util.send_email(email_data, html=True, img=('images/image-1.png', '<logo>'))
+
+            response['data'] = {'email': user_obj.email}
+            response['message'] = USER_REGISTRATION_SUCCESS
+            logger.info(response)
+            return Response(response, status=status.HTTP_201_CREATED)
+        except Exception as e:
+            logger.info(str(e))
+            response['message'] = USER_REGISTRATION_FAIL
+            response['error'] = str(e)
+            logger.info(response)
+            return Response(response, status=status.HTTP_400_BAD_REQUEST)
 
 
 # Completed: Working as expected
@@ -89,10 +113,10 @@ class VerifyEmail(views.APIView):
     serializer_class = EmailVerificationSerializer
 
     def post(self, request):
-        token = request.data.get('token')
-        response = dict(data={}, message="", error="")
+        response = dict(data=dict(), message="", error="")
 
         try:
+            token = request.data.get('token')
             payload = jwt.decode(token, settings.SECRET_KEY, algorithms=['HS256'])
             user = User.objects.get(id=payload['user_id'])
             if not user:
@@ -122,15 +146,23 @@ class LoginAPIView(generics.GenericAPIView):
     serializer_class = LoginSerializer
 
     def post(self, request):
-        response = dict(data={}, message="", error="")
-        serializer = self.serializer_class(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        response['data'] = serializer.data
-        logger.info(response)
-        result = Response(response, status=status.HTTP_200_OK)
-        result.set_cookie('auth_token', serializer.data.get('access'))
-        result.set_cookie('refresh_token', serializer.data.get('refresh'))
-        return result
+        response = dict(data=dict(), message="", error="")
+
+        try:
+            serializer = self.serializer_class(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            response['data'] = serializer.data
+            response['message'] = AUTH_SUCCESS
+            logger.info(response)
+            result = Response(response, status=status.HTTP_200_OK)
+            result.set_cookie('auth_token', serializer.data.get('access'))
+            result.set_cookie('refresh_token', serializer.data.get('refresh'))
+            return result
+
+        except Exception as e:
+            response['message'] = AUTH_FAIL
+            response['error'] = str(e)
+            return Response(response, status=status.HTTP_400_BAD_REQUEST)
 
 
 class LogoutAPIView(views.APIView):
@@ -138,16 +170,19 @@ class LogoutAPIView(views.APIView):
     serializer_class = LogoutSerializer
 
     def post(self, request):
-        response = dict(data={}, message="", error="")
+        response = dict(data=dict(), message="", error="")
         try:
             refresh_token = request.data["refresh"]
             token = RefreshToken(refresh_token)
             token.blacklist()
             response['data'] = {'status': 205}
+            response['message'] = LOGOUT_SUCCESS
             logger.info(response)
             return Response(status=status.HTTP_205_RESET_CONTENT)
         except Exception as e:
             logger.exception(e)
+            response['message'] = LOGOUT_FAIL
+            response['error'] = str(e)
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -155,113 +190,129 @@ class RequestPasswordResetEmail(generics.GenericAPIView):
     serializer_class = ResetPasswordEmailRequestSerializer
 
     def post(self, request):
-        response = dict(data={}, message="", error="")
-        serializer = self.serializer_class(data=request.data)
+        response = dict(data=dict(), message="", error="")
 
-        email = request.data.get('email', '')
+        try:
+            serializer = self.serializer_class(data=request.data)
+            email = request.data.get('email', '')
+            if User.objects.filter(email=email).exists():
+                user = User.objects.get(email=email)
 
-        if User.objects.filter(email=email).exists():
-            user = User.objects.get(email=email)
+                # Check if the provider is email, else throw error
+                if user.auth_provider != AUTH_PROVIDERS['email']:
+                    response['error'] = WRONG_AUTH_PROVIDER_MESSAGE + user.auth_provider
+                    logger.info(response)
+                    return Response(response)
 
-            # CHECK IF THE PROVIDER IS EMAIL, ELSE ERROR
-            if user.auth_provider != AUTH_PROVIDERS['email']:
-                response['error'] = WRONG_AUTH_PROVIDER_MESSAGE + user.auth_provider
+                uidb64 = urlsafe_base64_encode(smart_bytes(user.id))
+                token = PasswordResetTokenGenerator().make_token(user)
+
+                # relativeLink = reverse('password-reset-confirm', kwargs={'uidb64': uidb64, 'token': token})
+                # redirect_url = request.data.get('redirect_url', '')
+                absurl = HOST_GLOBAL_FRONTEND_DEV + RESET_PASSWORD_PATH + uidb64 + "/" + token
+                email_body = RESET_PASSWORD_MESSAGE + absurl
+                data = {'email_body': email_body, 'to_email': user.email,
+                        'email_subject': RESET_PASSWORD_EMAIL_SUBJECT}
+                Util.send_email(data)
+            else:
+                response['message'] = NO_USER_REGISTERED_WITH_EMAIL
                 logger.info(response)
-                return Response(response)
-
-            uidb64 = urlsafe_base64_encode(smart_bytes(user.id))
-            token = PasswordResetTokenGenerator().make_token(user)
-
-            # relativeLink = reverse('password-reset-confirm', kwargs={'uidb64': uidb64, 'token': token})
-            # redirect_url = request.data.get('redirect_url', '')
-            absurl = HOST_LOCAL + RESET_PASSWORD_PATH + uidb64 + "/" + token
-
-            email_body = RESET_PASSWORD_MESSAGE + absurl
-
-            data = {'email_body': email_body, 'to_email': user.email,
-                    'email_subject': RESET_PASSWORD_EMAIL_SUBJECT}
-
-            Util.send_email(data)
-        else:
-            response['error'] = NO_USER_REGISTERED_WITH_EMAIL
+                return Response(response, status=status.HTTP_200_OK)
+            response['message'] = RESET_PASSWORD_LINK_SENT_MESSAGE
             logger.info(response)
-            return Response(response)
-        response['message'] = RESET_PASSWORD_LINK_SENT_MESSAGE
-        logger.info(response)
-        return Response(response, status=status.HTTP_200_OK)
+            return Response(response, status=status.HTTP_200_OK)
+        except Exception as e:
+            response['message'] = RESET_PASSWORD_FAIL
+            response['error'] = str(e)
+            return Response(response, status=status.HTTP_400_BAD_REQUEST)
 
 
 class PasswordTokenCheckAPI(generics.GenericAPIView):
     serializer_class = SetNewPasswordSerializer
 
     def get(self, request, uidb64, token):
-        response = dict(data={}, message="", error="")
+        response = dict(data=dict(), message="", error="")
         try:
-            id = smart_str(urlsafe_base64_decode(uidb64))
-            user = User.objects.get(id=id)
+            user_id = smart_str(urlsafe_base64_decode(uidb64))
+            user = User.objects.get(id=user_id)
 
             if not user:
-                response['error'] = USER_NOT_RECOGNISED
+                response['message'] = USER_NOT_RECOGNISED
                 logger.info(response)
-                return Response(response)
+                return Response(response, status=status.HTTP_200_OK)
 
             if not PasswordResetTokenGenerator().check_token(user, token):
-                response['error'] = INVALID_TOKEN
+                response['message'] = INVALID_TOKEN
                 logger.info(response)
-                return Response(response)
+                return Response(response, status=status.HTTP_200_OK)
 
+            response['data'] = {'success': True}
             response['message'] = VALID_TOKEN_PASSWORD_RESET
-            response['success'] = True
             logger.info(response)
-            return Response(response)
+            return Response(response, status.HTTP_200_OK)
 
         except DjangoUnicodeDecodeError as identifier:
-            response['error'] = INVALID_RESET_PASSWORD_LINK
+            response['message'] = INVALID_RESET_PASSWORD_LINK
+            response['error'] = str(identifier)
             logger.exception(identifier)
-            return Response(response)
+            return Response(response, status.HTTP_400_BAD_REQUEST)
 
 
 class SetNewPasswordAPIView(generics.GenericAPIView):
     serializer_class = SetNewPasswordSerializer
 
     def patch(self, request):
-        response = dict(data={}, message="", error="")
-        serializer = self.serializer_class(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        response['message'] = RESET_PASSWORD_SUCCESS
-        response['success'] = True
-        logger.info(response)
-        return Response(response, status=status.HTTP_200_OK)
+        response = dict(data=dict(), message="", error="")
+
+        try:
+            serializer = self.serializer_class(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            response['data'] = {'success': True}
+            response['message'] = RESET_PASSWORD_SUCCESS
+            logger.info(response)
+            return Response(response, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            response['message'] = RESET_PASSWORD_FAIL
+            response['error'] = str(e)
+            return Response(response, status=status.HTTP_400_BAD_REQUEST)
 
 
-# TO ALLOW LOGGED IN USER TO CHANGE HIS PASSWORD
+# Allow Logged In User to change their password
 class PasswordChangeAPIView(generics.GenericAPIView):
     permission_classes = (permissions.IsAuthenticated,)
     serializer_class = PasswordChangeSerializer
 
     def patch(self, request):
-        response = dict(data={}, message="", error="")
-        user_id = request._auth.payload.get('user_id', None)
-        email = self.request.user.email
-        user_instance = User.objects.get(id=user_id)
-        if user_instance.auth_provider != AUTH_PROVIDERS['email']:
-            response['message'] = RESET_PASSWORD_FAIL_WRONG_AUTH_PROVIDER + user_instance.auth_provider
-            response['success'] = False
-            logger.info(response)
-            return Response(response)
+        response = dict(data=dict(), message="", error="")
 
-        serializer = self.serializer_class(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        password = serializer.data['password']
-        new_password = serializer.data['new_password']
-        user = auth.authenticate(email=email, password=password)
-        if not user:
-            response['error'] = INCORRECT_PASSWORD
+        try:
+            user_id = request._auth.payload.get('user_id', None)
+            email = self.request.user.email
+            user_instance = User.objects.get(id=user_id)
+            if user_instance.auth_provider != AUTH_PROVIDERS['email']:
+                response['data'] = {'success': False}
+                response['message'] = RESET_PASSWORD_FAIL_WRONG_AUTH_PROVIDER + user_instance.auth_provider
+                logger.info(response)
+                return Response(response, status=status.HTTP_200_OK)
+
+            serializer = self.serializer_class(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            password = serializer.data['password']
+            new_password = serializer.data['new_password']
+            user = auth.authenticate(email=email, password=password)
+            if not user:
+                response['message'] = INCORRECT_PASSWORD
+                logger.info(response)
+                raise AuthenticationFailed(INCORRECT_PASSWORD)
+            user.set_password(new_password)
+            user.save()
+            response['data'] = {'success': True}
+            response['message'] = CHANGE_PASSWORD_SUCCESS
             logger.info(response)
-            raise AuthenticationFailed(INCORRECT_PASSWORD)
-        user.set_password(new_password)
-        user.save()
-        response['message'] = CHANGE_PASSWORD_SUCCESS
-        response['success'] = True
-        logger.info(response)
-        return Response(response, status=status.HTTP_200_OK)
+            return Response(response, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            response['message'] = CHANGE_PASSWORD_FAIL
+            response['error'] = str(e)
+            return Response(response, status=status.HTTP_400_BAD_REQUEST)
