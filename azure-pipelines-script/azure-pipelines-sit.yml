@@ -1,0 +1,29 @@
+# Starter pipeline
+trigger:
+- staging
+
+resources:
+- repo: self
+
+jobs:
+- job: PurplePay_Dev
+  displayName: 'PurplePay sit build'
+
+  pool:
+    name: 'purplepay-agent'
+  
+  variables:
+  - group: 'Build Sit Configuration'
+
+  steps:
+  - script: docker login -u $(DOCKER_USER) -p $(DOCKER_PASS) $(DOCKER_REPO)
+    displayName: 'docker login'
+
+  - script: docker build -t $(STAGE)/$(IMAGE_NAME):$(IMAGE_TAG) .
+    displayName: 'docker build image'
+
+  - script: docker tag $(STAGE)/$(IMAGE_NAME):$(IMAGE_TAG) $(DOCKER_REPO)/$(STAGE)/$(IMAGE_NAME):$(IMAGE_TAG) 
+    displayName: 'docker tag image'
+  
+  - script: docker push $(DOCKER_REPO)/$(STAGE)/$(IMAGE_NAME):$(IMAGE_TAG)
+    displayName: 'docker push image into container registry'

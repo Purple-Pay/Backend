@@ -1,6 +1,6 @@
 from .models import (
     PaymentType, Currency, Payment, PaymentSession, PaymentStatus,
-    PaymentBurner, PaymentBurnerAddress)
+    PaymentBurner, PaymentBurnerAddress, PaymentBurnerSample, PaymentBurnerAddressSample)
 from rest_framework import serializers
 from authentication.models import User
 from datetime import datetime, timedelta
@@ -51,6 +51,22 @@ class PaymentBurnerAddressSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = PaymentBurnerAddress
+        fields = "__all__"
+
+
+class PaymentBurnerSampleSerializer(serializers.ModelSerializer):
+    id = serializers.UUIDField(read_only=True)
+
+    class Meta:
+        model = PaymentBurnerSample
+        fields = "__all__"
+
+
+class PaymentBurnerAddressSampleSerializer(serializers.ModelSerializer):
+    id = serializers.UUIDField(read_only=True)
+
+    class Meta:
+        model = PaymentBurnerAddressSample
         fields = "__all__"
 
 

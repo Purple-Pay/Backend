@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from authentication.resources.magic_constants import (
+from authentication.resources.constants import (
     AUTH_FAIL_USER_INACTIVE, AUTH_FAIL_INVALID_CREDENTIALS,
     AUTH_FAIL_USER_CREATOR_VERIFICATION_PENDING, AUTH_FAIL_EMAIL_NOT_VERIFIED,
     INVALID_PHONE_NUMBER,
@@ -111,7 +111,6 @@ class LogoutSerializer(serializers.Serializer):
 
 class ResetPasswordEmailRequestSerializer(serializers.Serializer):
     email = serializers.EmailField(min_length=2)
-
     redirect_url = serializers.CharField(max_length=500, required=False)
 
     class Meta:
@@ -150,7 +149,7 @@ class SetNewPasswordSerializer(serializers.Serializer):
 
         except Exception as e:
             raise AuthenticationFailed('The reset link is invalid', 401)
-        return super().validate(attrs)
+        # return super().validate(attrs)
 
 
 class PasswordChangeSerializer(serializers.Serializer):

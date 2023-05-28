@@ -5,3 +5,6 @@ CREATE_APIKEY_FAIL = "API Key creation failed"
 EXCEPTION_OCCURRED = "Exception! PLease check error"
 DELETE_API_KEY_SUCCESS = "API Key deleted successfully"
 DELETE_API_KEY_FAIL = "API Key could not be deleted"
+API_KEY_INVALID = 'API Key Invalid'
+USER_PROFILE_SUCCESS_FOUND = 'User Profile found successfully'
+USER_PROFILE_FAIL_NOT_FOUND = 'User Profile not found'
