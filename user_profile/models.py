@@ -10,7 +10,7 @@ class UserType(PrimaryUUIDTimeStampedModel):
     name = models.CharField(_('name'), max_length=50, blank=True, null=True)
 
     def __str__(self):
-        return str(self.id) + "::" + str(self.name)
+        return f"Id::{str(self.id)}::::Name::{str(self.name)}"
 
 
 class UserProfile(PrimaryUUIDTimeStampedModel):
@@ -30,7 +30,7 @@ class UserProfile(PrimaryUUIDTimeStampedModel):
     company_url = models.CharField(_('company_url'), max_length=512, blank=True, null=True)
 
     def __str__(self):
-        return str(self.id) + "::" + str(self.user) + "::" + str(self.user_type)
+        return f"Id::{str(self.id)}::::UserId::{str(self.user)}::::UserType::{str(self.user_type)}"
 
 
 class UserSmartContractWalletAddress(PrimaryUUIDTimeStampedModel):
@@ -46,5 +46,5 @@ class UserSmartContractWalletAddress(PrimaryUUIDTimeStampedModel):
                                  blank=True, null=True)
 
     def __str__(self):
-        return str(self.id) + "::" + str(self.user) + "::" + str(self.user_type)
+        return f"Id::{str(self.id)}::::UserId::{str(self.user)}"
 

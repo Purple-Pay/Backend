@@ -9,9 +9,10 @@ import datetime
 from django.utils import timezone
 import base64
 from user_profile.apps import logger
-from user_profile.resources.constants import (
+from user_profile.resources.magic_constants import (
     PROFILE_DOES_NOT_EXIST, GET_PROFILE_SUCCESS, CREATE_PROFILE_FAIL,
-    UPDATE_PROFILE_FAIL, DELETE_PROFILE_SUCCESS, DELETE_PROFILE_FAIL
+    UPDATE_PROFILE_FAIL, DELETE_PROFILE_SUCCESS, DELETE_PROFILE_FAIL,
+    CREATE_USER_SMART_CONTRACT_WALLET_SUCCESS, CREATE_USER_SMART_CONTRACT_WALLET_FAIL
 )
 
 
@@ -20,7 +21,8 @@ class UserProfileGetCreateUpdateDelete(generics.GenericAPIView):
     permission_classes = [IsAuthenticated, ]
 
     def get(self, request):
-        response = dict(data={}, message="", error="")
+        response = dict(data=dict(), message="", error="")
+
         try:
             user_id = self.request.user.id
             queryset = UserProfile.objects.get(user=user_id)
@@ -33,68 +35,92 @@ class UserProfileGetCreateUpdateDelete(generics.GenericAPIView):
             response['message'] = GET_PROFILE_SUCCESS
             logger.info(response)
             return Response(response, status=status.HTTP_200_OK)
-        except:
+
+        except Exception as e:
             response['message'] = PROFILE_DOES_NOT_EXIST
+            response['error'] = str(e)
             logger.info(response)
             return Response(response, status=status.HTTP_200_OK)
 
     def post(self, request):
-        response = dict(data={}, message="", error="")
-        user_id = self.request.user.id
-        request.data['user'] = user_id
-        print(request.data)
+        response = dict(data=dict(), message="", error="")
+        try:
+            user_id = self.request.user.id
+            request.data['user'] = user_id
+            print(request.data)
 
-        # user_obj = User.objects.get(id=user_id)
-        serializer = self.serializer_class(data=request.data)
+            # user_obj = User.objects.get(id=user_id)
+            serializer = self.serializer_class(data=request.data)
 
-        if serializer.is_valid():
-            # if 'phone_number' in request.data:
-            #     user_obj.phone_number = request.data['phone_number']
-            #     user_obj.save()
-            serializer.save()
+            if serializer.is_valid():
+                # if 'phone_number' in request.data:
+                #     user_obj.phone_number = request.data['phone_number']
+                #     user_obj.save()
+                serializer.save()
 
-            data = serializer.data
-            response['data'] = data
-            # response['data']['phone_number'] = str(user_obj.phone_number)
-            response['message'] = GET_PROFILE_SUCCESS
+                data = serializer.data
+                response['data'] = data
+                # response['data']['phone_number'] = str(user_obj.phone_number)
+                response['message'] = GET_PROFILE_SUCCESS
 
-            logger.info(response)
-            return Response(response, status=status.HTTP_200_OK)
-        response['message'] = CREATE_PROFILE_FAIL
-        response['error'] = serializer.errors
-        logger.error(response['error'])
-        return Response(response, status=status.HTTP_400_BAD_REQUEST)
+                logger.info(response)
+                return Response(response, status=status.HTTP_200_OK)
+            response['message'] = CREATE_PROFILE_FAIL
+            response['error'] = serializer.errors
+            logger.error(response['error'])
+            return Response(response, status=status.HTTP_400_BAD_REQUEST)
+
+        except Exception as e:
+            response['message'] = CREATE_PROFILE_FAIL
+            response['error'] = str(e)
+            logger.error(response['error'])
+            return Response(response, status=status.HTTP_400_BAD_REQUEST)
 
     def put(self, request):
-        response = dict(data={}, message="", error="")
-        user_id = self.request.user.id
-        # user_obj = User.objects.get(id=user_id)
-        profile_obj = UserProfile.objects.get(user=user_id)
-        serializer = self.serializer_class(profile_obj, data=request.data)
+        response = dict(data=dict(), message="", error="")
 
-        if serializer.is_valid():
-            # if 'phone_number' in request.data:
-            #     user_obj.phone_number = request.data['phone_number']
-            #     user_obj.save()
-            serializer.save()
-            data = serializer.data
-            response['data'] = data
-            # response['data']['phone_number'] = str(user_obj.phone_number)
-            logger.info(response)
-            return Response(response, status=status.HTTP_200_OK)
-        response['message'] = UPDATE_PROFILE_FAIL
-        response['error'] = serializer.errors
-        logger.error(response['error'])
-        return Response(response, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            user_id = self.request.user.id
+            # user_obj = User.objects.get(id=user_id)
+            profile_obj = UserProfile.objects.get(user=user_id)
+            serializer = self.serializer_class(profile_obj, data=request.data)
+
+            if serializer.is_valid():
+                # if 'phone_number' in request.data:
+                #     user_obj.phone_number = request.data['phone_number']
+                #     user_obj.save()
+                serializer.save()
+                data = serializer.data
+                response['data'] = data
+                # response['data']['phone_number'] = str(user_obj.phone_number)
+                logger.info(response)
+                return Response(response, status=status.HTTP_200_OK)
+            response['message'] = UPDATE_PROFILE_FAIL
+            response['error'] = serializer.errors
+            logger.error(response['error'])
+            return Response(response, status=status.HTTP_400_BAD_REQUEST)
+
+        except Exception as e:
+            response['message'] = UPDATE_PROFILE_FAIL
+            response['error'] = str(e)
+            logger.error(response['error'])
+            return Response(response, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request):
-        response = dict(data={}, message="", error="")
-        user_id = self.request.user.id
-        profile_obj = UserProfile.objects.get(user=user_id)
-        profile_obj.delete()
-        response['message'] = DELETE_PROFILE_SUCCESS
-        logger.info(response)
-        return Response(response, status=status.HTTP_200_OK)
+        response = dict(data=dict(), message="", error="")
+
+        try:
+            user_id = self.request.user.id
+            profile_obj = UserProfile.objects.get(user=user_id)
+            profile_obj.delete()
+            response['message'] = DELETE_PROFILE_SUCCESS
+            logger.info(response)
+            return Response(response, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            response['message'] = DELETE_PROFILE_FAIL
+            response['error'] = str(e)
+            return Response(response, status=status.HTTP_400_BAD_REQUEST)
 
 
 class UserTypeListCreate(generics.ListCreateAPIView):
@@ -115,7 +141,8 @@ class UserSmartContractWalletAddressGetCreateUpdateDelete(generics.GenericAPIVie
     permission_classes = [IsAuthenticated, ]
 
     def get(self, request):
-        response = dict(data={}, message="", error="")
+        response = dict(data=dict(), message="", error="")
+
         try:
             user_id = self.request.user.id
             queryset = UserSmartContractWalletAddress.objects.get(user=user_id)
@@ -125,31 +152,41 @@ class UserSmartContractWalletAddressGetCreateUpdateDelete(generics.GenericAPIVie
             response['message'] = GET_PROFILE_SUCCESS
             logger.info(response)
             return Response(response, status=status.HTTP_200_OK)
-        except:
+
+        except Exception as e:
             response['message'] = PROFILE_DOES_NOT_EXIST
+            response['error'] = str(e)
             logger.info(response)
             return Response(response, status=status.HTTP_200_OK)
 
     def post(self, request):
-        response = dict(data={}, message="", error="")
-        user_id = self.request.user.id
-        request.data['user'] = user_id
-        serializer = self.serializer_class(data=request.data)
+        response = dict(data=dict(), message="", error="")
 
-        if serializer.is_valid():
-            serializer.save()
-            data = serializer.data
-            response['data'] = data
-            response['message'] = 'Creation of User Smart Contract Wallet success'
+        try:
+            user_id = self.request.user.id
+            request.data['user'] = user_id
+            serializer = self.serializer_class(data=request.data)
+
+            if serializer.is_valid():
+                serializer.save()
+                data = serializer.data
+                response['data'] = data
+                response['message'] = CREATE_USER_SMART_CONTRACT_WALLET_SUCCESS
+                logger.info(response)
+                return Response(response, status=status.HTTP_200_OK)
+            response['message'] = CREATE_USER_SMART_CONTRACT_WALLET_FAIL
+            response['error'] = serializer.errors
+            logger.error(response['error'])
+            return Response(response, status=status.HTTP_400_BAD_REQUEST)
+
+        except Exception as e:
+            response['message'] = CREATE_USER_SMART_CONTRACT_WALLET_FAIL
+            response['error'] = str(e)
             logger.info(response)
-            return Response(response, status=status.HTTP_200_OK)
-        response['message'] = 'Creation of User Smart Contract Wallet failed'
-        response['error'] = serializer.errors
-        logger.error(response['error'])
-        return Response(response, status=status.HTTP_400_BAD_REQUEST)
+            return Response(response, status=status.HTTP_400_BAD_REQUEST)
 
     def put(self, request):
-        response = dict(data={}, message="Update will be enabled soon", error="")
+        response = dict(data=dict(), message="Update will be enabled soon", error="")
         # user_id = self.request.user.id
         #
         # user_scw_obj = UserSmartContractWalletAddress.objects.filter(user_smart_contract_wallet_address=user_smart_contract_wallet_address)
@@ -172,7 +209,7 @@ class UserSmartContractWalletAddressGetCreateUpdateDelete(generics.GenericAPIVie
         return Response(response, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request):
-        response = dict(data={}, message="Delete will be enabled soon", error="")
+        response = dict(data=dict(), message="Delete will be enabled soon", error="")
         # user_id = self.request.user.id
         # profile_obj = UserProfile.objects.get(user=user_id)
         # profile_obj.delete()
