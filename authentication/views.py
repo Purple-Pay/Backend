@@ -16,13 +16,13 @@ from authentication.resources.constants import (
     VALID_TOKEN_PASSWORD_RESET, INVALID_RESET_PASSWORD_LINK,
     RESET_PASSWORD_SUCCESS, RESET_PASSWORD_FAIL_WRONG_AUTH_PROVIDER,
     INCORRECT_PASSWORD, CHANGE_PASSWORD_SUCCESS, CHANGE_PASSWORD_FAIL, FETCH_USER_DETAILS_SUCCESS,
-    FETCH_USER_DETAILS_FAIL
+    FETCH_USER_DETAILS_FAIL, EMAIL_SEND_SUCCESSFULLY, UNABLE_TO_RESEND_EMAIL
 )
 from rest_framework import generics, status, views, permissions
 from .serializers import (
     RegisterSerializer, SetNewPasswordSerializer,
     ResetPasswordEmailRequestSerializer, EmailVerificationSerializer,
-    LoginSerializer, LogoutSerializer, PasswordChangeSerializer)
+    LoginSerializer, LogoutSerializer, PasswordChangeSerializer, EmailVerificationResendSerializer)
 
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -91,8 +91,8 @@ class RegisterView(generics.GenericAPIView):
             verify_absolute_url = HOST_GLOBAL_FRONTEND_STAGING + "email/verify/?token=" + str(token)
 
             # email_body = VERIFICATION_EMAIL_BODY + verify_absolute_url
-            email_body = render_to_string('index.html', {'url': verify_absolute_url})
-            email_data = {'email_body': email_body, 'to_email': user_obj.email,
+            email_body = render_to_string('email_verify.html', {'url': verify_absolute_url})
+            email_data = {'email_body': email_body, 'to_email': [user_obj.email],
                           'email_subject': VERIFICATION_EMAIL_SUBJECT}
             Util.send_email(email_data, html=True, img=('images/image-1.png', '<logo>'))
 
@@ -107,6 +107,40 @@ class RegisterView(generics.GenericAPIView):
             logger.info(response)
             return Response(response, status=status.HTTP_400_BAD_REQUEST)
 
+class VerfiyEmailResend(generics.GenericAPIView):
+    serializer_class = EmailVerificationResendSerializer
+    renderer_classes = (UserRenderer,)
+
+    def post(self, request):
+        response = dict(data=dict(), message="", error="")
+        try:
+            email = request.data.get('email', '')
+            if User.objects.filter(email=email).exists():
+                user_obj = User.objects.get(email=email)
+                token = RefreshToken.for_user(
+                    user_obj).access_token  # Adds token to outstanding token list and provides access_token
+
+                verify_absolute_url = HOST_GLOBAL_FRONTEND_STAGING + "email/verify/?token=" + str(token)
+
+                # email_body = VERIFICATION_EMAIL_BODY + verify_absolute_url
+                email_body = render_to_string('email_verify.html', {'url': verify_absolute_url})
+                email_data = {'email_body': email_body, 'to_email': [user_obj.email],
+                              'email_subject': VERIFICATION_EMAIL_SUBJECT}
+                Util.send_email(email_data, html=True, img=('images/image-1.png', '<logo>'))
+            else:
+                response['message'] = NO_USER_REGISTERED_WITH_EMAIL
+                logger.info(response)
+                return Response(response, status=status.HTTP_200_OK)
+            response['data'] = {'email': user_obj.email}
+            response['message'] = EMAIL_SEND_SUCCESSFULLY
+            logger.info(response)
+            return Response(response, status=status.HTTP_200_OK)
+        except Exception as e:
+            logger.info(str(e))
+            response['message'] = UNABLE_TO_RESEND_EMAIL
+            response['error'] = str(e)
+            logger.info(response)
+            return Response(response, status=status.HTTP_400_BAD_REQUEST)
 
 # Completed: Working as expected
 class VerifyEmail(views.APIView):
@@ -209,11 +243,13 @@ class RequestPasswordResetEmail(generics.GenericAPIView):
 
                 # relativeLink = reverse('password-reset-confirm', kwargs={'uidb64': uidb64, 'token': token})
                 # redirect_url = request.data.get('redirect_url', '')
-                absurl = HOST_GLOBAL_FRONTEND_DEV + RESET_PASSWORD_PATH + uidb64 + "/" + token
-                email_body = RESET_PASSWORD_MESSAGE + absurl
-                data = {'email_body': email_body, 'to_email': user.email,
-                        'email_subject': RESET_PASSWORD_EMAIL_SUBJECT}
-                Util.send_email(data)
+
+                reset_absolute_url = HOST_GLOBAL_FRONTEND_DEV + RESET_PASSWORD_PATH + uidb64 + "/" + token
+                # email_body = RESET_PASSWORD_MESSAGE + reset_absolute_url
+                email_body = render_to_string('email_reset_password.html', {'url': reset_absolute_url})
+                email_data = {'email_body': email_body, 'to_email': [user.email],
+                              'email_subject': RESET_PASSWORD_EMAIL_SUBJECT}
+                Util.send_email(email_data, html=True, img=('images/image-1.png', '<logo>'))
             else:
                 response['message'] = NO_USER_REGISTERED_WITH_EMAIL
                 logger.info(response)
