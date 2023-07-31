@@ -4,7 +4,8 @@ from web3 import Web3
 from web3.middleware import geth_poa_middleware
 from eth_account import Account
 from eth_account.signers.local import LocalAccount
-from .models import PurplePayFactoryContract, PaymentBurnerAddress, PurplePayMultisigContract
+from .models import (PurplePayFactoryContract, PaymentBurnerAddress, PurplePayMultisigContract,
+                     PaymentBurnerAddressSample)
 import threading
 from .resources.constants import (ASHARAN_POLYGONSCAN_API_KEY, ASHARAN_ETHERSCAN_API_KEY,
                                   BLOCKEXPLORER_URLS, RPC_ENDPOINTS,
@@ -105,8 +106,12 @@ def get_burner_address_balance(burner_address, token_instance, contract_abi, cha
 
 # Start a thread to deploy and distribute
 def deploy_and_disburse(burner_address_instance, token_instance,
-                        payment_instance, chain_id):
-    payment_burner_address_obj = PaymentBurnerAddress.objects.filter(id=burner_address_instance.get('id'))[0]
+                        payment_instance, chain_id, is_sample=False):
+    if is_sample:
+        payment_burner_address_obj = PaymentBurnerAddressSample.objects.filter(id=burner_address_instance.get('id'))[0]
+    else:
+        payment_burner_address_obj = PaymentBurnerAddress.objects.filter(id=burner_address_instance.get('id'))[0]
+
     try:
         payment_burner_address_obj.burner_contract_deploy_status = DEPLOY_STATUS_INITIATED_DEPLOY
         payment_burner_address_obj.save()

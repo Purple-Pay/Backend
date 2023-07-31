@@ -87,6 +87,7 @@ class PaymentBurner(PrimaryUUIDTimeStampedModel):
     transaction_block_hash = models.CharField(_('Transaction Block Hash'), max_length=512, blank=True, null=True)
     blockchain_network = models.ForeignKey(BlockchainNetwork, on_delete=models.CASCADE, related_name="payment_burners",
                                            blank=True, null=True)
+    description = models.CharField(_('Description'), max_length=512, blank=True, null=True)
 
     def __str__(self):
         return f"PaymentId::{str(self.id)}::::UserOrderId::{str(self.user_order_id)}"
@@ -161,6 +162,7 @@ class PaymentBurnerSample(PrimaryUUIDTimeStampedModel):
     transaction_block_hash = models.CharField(_('Transaction Block Hash'), max_length=512, blank=True, null=True)
     blockchain_network = models.ForeignKey(BlockchainNetwork, on_delete=models.CASCADE, related_name="payment_burner_samples",
                                            blank=True, null=True)
+    description = models.CharField(_('Description'), max_length=512, blank=True, null=True)
 
     def __str__(self):
         return f"PaymentId::{str(self.id)}::::UserOrderId::{str(self.user_order_id)}"
