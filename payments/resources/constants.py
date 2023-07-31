@@ -14,8 +14,8 @@ PURPLE_PAY_FACTORY_CONTRACT_UNAVAILABLE = "Shoot! The Purple Pay Factory contrac
 CREATE_BURNER_ADDRESS_SUCCESS = "Yippee! You've successfully created a burner address. Just don't burn any bridges, okay?"
 CREATE_BURNER_ADDRESS_FAIL = "Dang it! Your burner address creation failed. Should've added more sizzle!"
 
-PAYMENT_COMPLETED_SUCCESS = "Success: Payment Completed"
-BURNER_ADDRESS_UNAVAILABLE_AGAINST_PAYMENT_ID_FAIL = "No Burner Addresses available against this payment Id"
+PAYMENT_COMPLETED_SUCCESS = "Yay! Your payment completed successfully. The digital cash register is ringing!"
+BURNER_ADDRESS_UNAVAILABLE_AGAINST_PAYMENT_ID_FAIL = "Oh no! There's no burner address available for this payment ID. Maybe it's on vacation?"
 PAYMENT_STATUS_COMPLETED = "Completed"
 PAYMENT_STATUS_IN_PROGRESS = "In Progress"
 PAYMENT_ID_MISSING_FAIL = "Oh no! We're missing a Payment ID. It's like a sandwich without the filling."
