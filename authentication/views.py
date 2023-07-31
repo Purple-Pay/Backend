@@ -69,6 +69,14 @@ class UserDetails(generics.GenericAPIView):
             response['error'] = str(e)
             return Response(response, status=status.HTTP_400_BAD_REQUEST)
 
+def get_redirect_url():
+    deployed_env = os.environ.get('BUILD_ENV', 'dev')
+    print('test',deployed_env)
+    if deployed_env == 'sit':
+        return HOST_GLOBAL_FRONTEND_STAGING
+    if deployed_env == 'prod':
+        return HOST_GLOBAL_FRONTEND_PROD
+    return HOST_GLOBAL_FRONTEND_DEV
 
 # Completed: Working as expected
 class RegisterView(generics.GenericAPIView):
@@ -88,7 +96,8 @@ class RegisterView(generics.GenericAPIView):
             token = RefreshToken.for_user(
                 user_obj).access_token  # Adds token to outstanding token list and provides access_token
 
-            verify_absolute_url = HOST_GLOBAL_FRONTEND_STAGING + "email/verify/?token=" + str(token)
+            redirect_url = get_redirect_url()
+            verify_absolute_url = redirect_url + "email/verify/?token=" + str(token)
 
             # email_body = VERIFICATION_EMAIL_BODY + verify_absolute_url
             email_body = render_to_string('email_verify.html', {'url': verify_absolute_url})
@@ -120,7 +129,8 @@ class VerfiyEmailResend(generics.GenericAPIView):
                 token = RefreshToken.for_user(
                     user_obj).access_token  # Adds token to outstanding token list and provides access_token
 
-                verify_absolute_url = HOST_GLOBAL_FRONTEND_STAGING + "email/verify/?token=" + str(token)
+                redirect_url = get_redirect_url()
+                verify_absolute_url = redirect_url + "email/verify/?token=" + str(token)
 
                 # email_body = VERIFICATION_EMAIL_BODY + verify_absolute_url
                 email_body = render_to_string('email_verify.html', {'url': verify_absolute_url})
@@ -243,8 +253,8 @@ class RequestPasswordResetEmail(generics.GenericAPIView):
 
                 # relativeLink = reverse('password-reset-confirm', kwargs={'uidb64': uidb64, 'token': token})
                 # redirect_url = request.data.get('redirect_url', '')
-
-                reset_absolute_url = HOST_GLOBAL_FRONTEND_DEV + RESET_PASSWORD_PATH + uidb64 + "/" + token
+                redirect_url = get_redirect_url()
+                reset_absolute_url = redirect_url + RESET_PASSWORD_PATH + uidb64 + "/" + token
                 # email_body = RESET_PASSWORD_MESSAGE + reset_absolute_url
                 email_body = render_to_string('email_reset_password.html', {'url': reset_absolute_url})
                 email_data = {'email_body': email_body, 'to_email': [user.email],
