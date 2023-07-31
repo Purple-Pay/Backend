@@ -348,6 +348,7 @@ class PaymentBurnerAddressGetCreateUpdate3(generics.GenericAPIView):
                 payment_serializer.save()
 
             payment_id = str(payment_serializer.data.get('id', None))
+            description = str(payment_serializer.data.get('description', None))
             # print('560', payment_id)
 
             # All tokens
@@ -406,7 +407,7 @@ class PaymentBurnerAddressGetCreateUpdate3(generics.GenericAPIView):
                 exchange_rate_current_currency_per_usd = exchange_rates_vs_1usd_res.get(currency.coingecko_id, {'usd': None}).get('usd', None)
                 if exchange_rate_current_currency_per_usd is None:
                     continue
-                amount_in_current_currency = order_amount * exchange_rate_current_currency_per_usd
+                amount_in_current_currency = order_amount / exchange_rate_current_currency_per_usd
                 amount_in_current_currency_as_smallest_unit = int(amount_in_current_currency * (10 ** currency.decimals))
                 # print('603', amount_in_current_currency_as_smallest_unit)
                 print_statement_with_line('views', '1130', 'purple_pay_factory_contract_address_qs[0].address', purple_pay_factory_contract_address_qs[0].address)
@@ -459,6 +460,7 @@ class PaymentBurnerAddressGetCreateUpdate3(generics.GenericAPIView):
 
             response['data']['id'] = payment_id
             response['data']['payment_status'] = payment_status_in_progress.name
+            response['data']['description'] = description
 
             response['message'] = CREATE_BURNER_ADDRESS_SUCCESS
             # logger.info(response)
@@ -860,6 +862,7 @@ class PaymentBurnerAddressSampleGetCreateUpdate(generics.GenericAPIView):
                 payment_serializer.save()
 
             payment_id = str(payment_serializer.data.get('id', None))
+            description = str(payment_serializer.data.get('description', None))
             # print('560', payment_id)
 
             # All tokens
@@ -918,7 +921,7 @@ class PaymentBurnerAddressSampleGetCreateUpdate(generics.GenericAPIView):
                 exchange_rate_current_currency_per_usd = exchange_rates_vs_1usd_res.get(currency.coingecko_id, {'usd': None}).get('usd', None)
                 if exchange_rate_current_currency_per_usd is None:
                     continue
-                amount_in_current_currency = order_amount * exchange_rate_current_currency_per_usd
+                amount_in_current_currency = order_amount / exchange_rate_current_currency_per_usd
                 amount_in_current_currency_as_smallest_unit = int(amount_in_current_currency * (10 ** currency.decimals))
                 # print('603', amount_in_current_currency_as_smallest_unit)
                 print_statement_with_line('views', '1130', 'purple_pay_factory_contract_address_qs[0].address', purple_pay_factory_contract_address_qs[0].address)
@@ -971,6 +974,7 @@ class PaymentBurnerAddressSampleGetCreateUpdate(generics.GenericAPIView):
 
             response['data']['id'] = payment_id
             response['data']['payment_status'] = payment_status_in_progress.name
+            response['data']['description'] = description
 
             response['message'] = CREATE_BURNER_ADDRESS_SUCCESS
             # logger.info(response)
