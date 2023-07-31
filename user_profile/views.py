@@ -9,7 +9,7 @@ import datetime
 from django.utils import timezone
 import base64
 from user_profile.apps import logger
-from user_profile.resources.magic_constants import (
+from user_profile.resources.constants import (
     PROFILE_DOES_NOT_EXIST, GET_PROFILE_SUCCESS, CREATE_PROFILE_FAIL,
     UPDATE_PROFILE_FAIL, DELETE_PROFILE_SUCCESS, DELETE_PROFILE_FAIL,
     CREATE_USER_SMART_CONTRACT_WALLET_SUCCESS, CREATE_USER_SMART_CONTRACT_WALLET_FAIL
