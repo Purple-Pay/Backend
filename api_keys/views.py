@@ -48,6 +48,7 @@ class APIKeyGetCreateUpdate(generics.GenericAPIView):
             #                     status=status.HTTP_400_BAD_REQUEST)
             data = dict()
             data['user'] = user_id
+            data['key_name'] = self.request.data.get('key_name', '')
             serializer = self.serializer_class(data=data)
 
             if serializer.is_valid():

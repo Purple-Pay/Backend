@@ -32,7 +32,7 @@ class Util:
     @staticmethod
     def send_email(data, html=False, img=None):
         email = EmailMessage(
-            subject=data['email_subject'], body=data['email_body'], to=[data['to_email']])
+            subject=data['email_subject'], body=data['email_body'], to=data['to_email'])
         if html:
             email.content_subtype='html'
         if img:

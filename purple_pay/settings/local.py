@@ -15,9 +15,9 @@ CORS_ORIGIN_ALLOW_ALL = True
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'purplepaydb_local',
-        'USER': 'core',
-        'PASSWORD': 'core1212',
+        'NAME': 'purplepaydb',
+        'USER': 'legittdotme',
+        'PASSWORD': 'Leg!ttdotm3',
         'HOST': 'localhost',
         'PORT': '5432',
     }
