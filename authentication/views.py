@@ -258,7 +258,7 @@ class RequestPasswordResetEmail(generics.GenericAPIView):
                 email_body = render_to_string('email_reset_password.html', {'url': reset_absolute_url})
                 email_data = {'email_body': email_body, 'to_email': [user.email],
                               'email_subject': RESET_PASSWORD_EMAIL_SUBJECT}
-                Util.send_email(email_data, html=True, img=('images/image-1.png', '<logo>'))
+                Util.send_email(email_data, html=True, img=('images/image-1b.png', '<logo>'))
             else:
                 response['message'] = NO_USER_REGISTERED_WITH_EMAIL
                 logger.info(response)
