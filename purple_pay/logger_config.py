@@ -1,8 +1,8 @@
 from datetime import datetime
 import os
 
-BASE_DIR_LOGGER = "/var/log/purple_pay/"
-#BASE_DIR_LOGGER = "/Users/alexratna/Desktop/test/purplepay_logger/"
+#BASE_DIR_LOGGER = "/var/log/purple_pay/"
+BASE_DIR_LOGGER = "/Users/alexratna/Desktop/test/purplepay_logger/"
 LOGGER_WHEN = 'H'
 LOGGER_INTERVAL = 24
 LOGGER_BACKUPCOUNT = 15

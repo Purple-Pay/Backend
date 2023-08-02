@@ -71,7 +71,6 @@ class UserDetails(generics.GenericAPIView):
 
 def get_redirect_url():
     deployed_env = os.environ.get('BUILD_ENV', 'dev')
-    print('test',deployed_env)
     if deployed_env == 'sit':
         return HOST_GLOBAL_FRONTEND_STAGING
     if deployed_env == 'prod':
@@ -268,6 +267,7 @@ class RequestPasswordResetEmail(generics.GenericAPIView):
             logger.info(response)
             return Response(response, status=status.HTTP_200_OK)
         except Exception as e:
+            print(str(e))
             response['message'] = RESET_PASSWORD_FAIL
             response['error'] = str(e)
             return Response(response, status=status.HTTP_400_BAD_REQUEST)
