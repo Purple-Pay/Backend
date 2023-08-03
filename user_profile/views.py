@@ -38,6 +38,7 @@ class UserProfileGetCreateUpdateDelete(generics.GenericAPIView):
             return Response(response, status=status.HTTP_200_OK)
 
         except Exception as e:
+            response['data']['id'] = None
             response['message'] = PROFILE_DOES_NOT_EXIST
             response['error'] = str(e)
             logger.info(response)
@@ -86,6 +87,7 @@ class UserProfileGetCreateUpdateDelete(generics.GenericAPIView):
             return Response(response, status=status.HTTP_400_BAD_REQUEST)
 
         except Exception as e:
+            response['data']['id'] = None
             response['message'] = CREATE_PROFILE_FAIL
             response['error'] = str(e)
             logger.error(response['error'])
@@ -116,6 +118,7 @@ class UserProfileGetCreateUpdateDelete(generics.GenericAPIView):
             return Response(response, status=status.HTTP_400_BAD_REQUEST)
 
         except Exception as e:
+            response['data']['id'] = None
             response['message'] = UPDATE_PROFILE_FAIL
             response['error'] = str(e)
             logger.error(response['error'])
@@ -133,6 +136,7 @@ class UserProfileGetCreateUpdateDelete(generics.GenericAPIView):
             return Response(response, status=status.HTTP_200_OK)
 
         except Exception as e:
+            response['data']['id'] = None
             response['message'] = DELETE_PROFILE_FAIL
             response['error'] = str(e)
             return Response(response, status=status.HTTP_400_BAD_REQUEST)
@@ -178,6 +182,7 @@ class UserSmartContractWalletAddressGetCreateUpdateDelete(generics.GenericAPIVie
             return Response(response, status=status.HTTP_200_OK)
 
         except Exception as e:
+            response['data']['id'] = None
             response['message'] = PROFILE_DOES_NOT_EXIST
             response['error'] = str(e)
             logger.info(response)
