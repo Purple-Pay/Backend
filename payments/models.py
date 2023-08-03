@@ -12,9 +12,14 @@ class PaymentType(PrimaryUUIDTimeStampedModel):
         return f"Id::{str(self.id)}::::Name::{str(self.name)}"
 
 
+class BlockchainNetworkType(PrimaryUUIDTimeStampedModel):
+    name = models.CharField(_('blockchain network'), max_length=100, blank=True, null=True)
+
+
 class BlockchainNetwork(PrimaryUUIDTimeStampedModel):
     name = models.CharField(_('blockchain network'), max_length=100, blank=True, null=True)
     chain_id = models.CharField(_('chain id'), max_length=100, blank=True, null=True)
+    network_type = models.ForeignKey(BlockchainNetworkType, on_delete=models.CASCADE, related_name="blockchain_network", blank=True, null=True)
 
     def __str__(self):
         return f"Id::{str(self.id)}::::Name::{str(self.name)}::::ChainId::{str(self.chain_id)}"

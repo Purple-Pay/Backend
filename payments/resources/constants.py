@@ -26,17 +26,33 @@ DEPLOY_STATUS_SUCCESS_DEPLOY = 'success deploy'
 
 ASHARAN_ETHERSCAN_API_KEY = "G99IM24UWSWJT5EIWZA65NNPUE216M95QV"
 ASHARAN_POLYGONSCAN_API_KEY = "Y6PDEQQNMRJTFR1WZKNC3KR3IDFB5SR7D7"
+ASHARAN_SUBSCAN_API_KEY = "a34ef694af434165a4bfbef9dca812c8"
+ASHARAN_BLOCKSCOUT_API_KEY = "a85e1005-1679-40c2-b17d-3c6d8dc1175b"
 
 BLOCKEXPLORER_URLS = {
     '5': {
         'name': 'goerli',
         'block_explorer': 'etherscan',
-        'base_url': 'https://api-goerli.etherscan.io/api'
+        'base_url': 'https://api-goerli.etherscan.io/api',
+        'api_key': ASHARAN_ETHERSCAN_API_KEY
     },
     '137': {
         'name': 'polygon mainnet',
         'block_explorer': 'blastapi',
-        'base_url': 'https://polygon-mainnet.public.blastapi.io/'
+        'base_url': 'https://polygon-mainnet.public.blastapi.io/',
+        'api_key': ASHARAN_POLYGONSCAN_API_KEY
+    },
+    '80001': {
+        'name': 'polygon mumbai',
+        'block_explorer': 'polygonscan',
+        'base_url': 'https://api-testnet.polygonscan.com/api',
+        'api_key': ASHARAN_POLYGONSCAN_API_KEY
+    },
+    '592': {
+        'name': 'astar mainnet',
+        'block_explorer': 'blockscout',
+        'base_url': 'https://blockscout.com/astar/api',
+        'api_key': ASHARAN_BLOCKSCOUT_API_KEY
     }
 }
 
@@ -48,8 +64,22 @@ RPC_ENDPOINTS = {
     '137': {
         'name': 'polygon mainnet',
         'url': "https://polygon-mainnet.public.blastapi.io"
+    },
+    '80001': {
+        'name': 'polygon mumbai',
+        'url': "https://polygon-testnet.public.blastapi.io"
+    },
+    '592': {
+        'name': 'astar mainnet',
+        'url': "https://astar.public.blastapi.io"
+    },
+    '81': {
+        'name': 'shibuya',
+        'url': "https://evm.shibuya.astar.network"
     }
 }
 
 COINGECKO_EXCHANGE_RATE_1BTC_URL = "https://api.coingecko.com/api/v3/exchange_rates"
 COINGECKO_EXCHANGE_RATE_VS_1USD_URL = "https://api.coingecko.com/api/v3/simple/price"
+MAINNET = 'mainnet'
+TESTNET = 'testnet'

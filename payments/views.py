@@ -21,6 +21,7 @@ import datetime
 from django.utils import timezone
 import base64
 from .apps import logger
+import os
 from .resources.constants import (
     GET_PAYMENT_STATUS_SUCCESS, USER_ID_API_KEY_MISMATCH,
     CREATE_PAYMENT_SUCCESS, CREATE_PAYMENT_FAIL, EXCEPTION_OCCURRED,
@@ -29,7 +30,8 @@ from .resources.constants import (
     COINGECKO_EXCHANGE_RATE_VS_1USD_URL, PAYMENT_ID_NOT_FOUND_FAIL, DATE_FILTER_MISSING_FAIL,
     PURPLE_PAY_FACTORY_CONTRACT_UNAVAILABLE, CREATE_BURNER_ADDRESS_SUCCESS, CREATE_BURNER_ADDRESS_FAIL,
     PAYMENT_COMPLETED_SUCCESS, BURNER_ADDRESS_UNAVAILABLE_AGAINST_PAYMENT_ID_FAIL, PAYMENT_STATUS_COMPLETED,
-    PAYMENT_STATUS_IN_PROGRESS, PAYMENT_ID_MISSING_FAIL, DEPLOY_STATUS_NOT_DEPLOY, DEPLOY_STATUS_FAILURE_DEPLOY
+    PAYMENT_STATUS_IN_PROGRESS, PAYMENT_ID_MISSING_FAIL, DEPLOY_STATUS_NOT_DEPLOY, DEPLOY_STATUS_FAILURE_DEPLOY,
+    MAINNET, TESTNET
 )
 from gql import gql, Client
 from gql.transport.aiohttp import AIOHTTPTransport
@@ -79,6 +81,21 @@ class PaymentStatusRetrieveUpdateDelete(generics.RetrieveUpdateDestroyAPIView):
     lookup_field = "id"
 
 
+def get_chain_ids_by_env():
+    deployed_env = os.environ.get('BUILD_ENV', 'dev')
+    testnet_qs = BlockchainNetwork.objects.filter(network_type__name=TESTNET)
+    chain_ids = [element.chain_id for element in testnet_qs]
+    if deployed_env == 'sit':
+        mainnet_qs = BlockchainNetwork.objects.filter(network_type__name=MAINNET)
+        chain_ids = [element.chain_id for element in mainnet_qs]
+        return chain_ids, MAINNET
+    if deployed_env == 'prod':
+        mainnet_qs = BlockchainNetwork.objects.filter(network_type=MAINNET)
+        chain_ids = [element.chain_id for element in mainnet_qs]
+        return chain_ids, MAINNET
+    return chain_ids, TESTNET
+
+
 class PaymentList(generics.GenericAPIView):
     permission_classes = [IsAuthenticated | IsAdminUser, ]
     serializers = {
@@ -111,15 +128,15 @@ class PaymentList(generics.GenericAPIView):
                 if element.currency is not None:
                     payment_data['symbol'] = element.currency.symbol_primary
                     payment_data['token_address'] = element.currency.token_address_on_network
-                    payment_data['chain_id'] = element.currency.blockchain_network.chain_id
-                    payment_data['chain_name'] = element.currency.blockchain_network.name
+                    # payment_data['chain_id'] = element.currency.blockchain_network.chain_id
+                    # payment_data['chain_name'] = element.currency.blockchain_network.name
                     payment_data['decimals'] = element.currency.decimals
                     payment_data['image_url'] = element.currency.asset_url
                 else:
                     payment_data['symbol'] = None
                     payment_data['token_address'] = None
-                    payment_data['chain_id'] = None
-                    payment_data['chain_name'] = None
+                    # payment_data['chain_id'] = None
+                    # payment_data['chain_name'] = None
                     payment_data['decimals'] = None
                     payment_data['image_url'] = None
                 # payment_data.pop('created_at')
@@ -137,15 +154,15 @@ class PaymentList(generics.GenericAPIView):
                 if element.currency is not None:
                     payment_burner_data['symbol'] = element.currency.symbol_primary
                     payment_burner_data['token_address'] = element.currency.token_address_on_network
-                    payment_burner_data['chain_id'] = element.currency.blockchain_network.chain_id
-                    payment_burner_data['chain_name'] = element.currency.blockchain_network.name
+                    # payment_burner_data['chain_id'] = element.currency.blockchain_network.chain_id
+                    # payment_burner_data['chain_name'] = element.currency.blockchain_network.name
                     payment_burner_data['decimals'] = element.currency.decimals
                     payment_burner_data['image_url'] = element.currency.asset_url
                 else:
                     payment_burner_data['symbol'] = None
                     payment_burner_data['token_address'] = None
-                    payment_burner_data['chain_id'] = None
-                    payment_burner_data['chain_name'] = None
+                    # payment_burner_data['chain_id'] = None
+                    # payment_burner_data['chain_name'] = None
                     payment_burner_data['decimals'] = None
                     payment_burner_data['image_url'] = None
 
@@ -165,11 +182,32 @@ class PaymentList(generics.GenericAPIView):
                 response['data'][idx]['payment_status'] = payment_status_all_name_set.get(
                     response['data'][idx].get('payment_status', None), None)
 
+            blockchain_network_all = BlockchainNetwork.objects.all()
+            blockchain_network_all_name_set = {element.id: element.chain_id for element in blockchain_network_all}
+            # print("lines 173", blockchain_network_all_name_set)
+
+            for idx in range(len(response['data'])):
+                response['data'][idx]['chain_id'] = blockchain_network_all_name_set.get(
+                    response['data'][idx].get('blockchain_network', None), None)
+                if "blockchain_network" in response['data'][idx]:
+                    response['data'][idx].pop('blockchain_network')
+                # print("line 178", response['data'][idx])
+
+            chain_ids_for_env, network_type = get_chain_ids_by_env()
+            result = []
+            for idx in range(len(response['data'])):
+                if response['data'][idx]['chain_id'] in chain_ids_for_env:
+                    result.append(response['data'][idx])
+
+            print("response::", response)
+            response['data'] = result
+            response['network_type'] = network_type
             response['message'] = GET_PAYMENT_LIST_SUCCESS
             # print(response)
             # logger.info(response)
             return Response(response, status=status.HTTP_200_OK)
         except Exception as e:
+            response['data'] = []
             response['message'] = EXCEPTION_OCCURRED
             response['error'] = str(e)
             # logger.info(response)
@@ -329,7 +367,8 @@ class PaymentBurnerAddressGetCreateUpdate3(generics.GenericAPIView):
 
             request.data['user'] = user_id_for_api_key_in_db
             request.data['final_address_to'] = user_profile[0].user_smart_contract_wallet_address
-            request.data['currency'] = Currency.objects.get(symbol_primary=request.data.get('currency', 'usd').upper()).id
+            request.data['currency'] = Currency.objects.get(
+                symbol_primary=request.data.get('currency', 'usd').upper()).id
 
             payment_status_in_progress = PaymentStatus.objects.get(name=PAYMENT_STATUS_IN_PROGRESS)
             request.data['payment_status'] = payment_status_in_progress.id
@@ -354,7 +393,8 @@ class PaymentBurnerAddressGetCreateUpdate3(generics.GenericAPIView):
             # All tokens
 
             # all currencies qs for requested network
-            all_currencies_qs = Currency.objects.exclude(currency_type__name='Fiat').filter(blockchain_network=blockchain_network.id)
+            all_currencies_qs = Currency.objects.exclude(currency_type__name='Fiat').filter(
+                blockchain_network=blockchain_network.id)
 
             print_statement_with_line('views', '1084', 'all_currencies_qs', all_currencies_qs)
             #
@@ -376,7 +416,8 @@ class PaymentBurnerAddressGetCreateUpdate3(generics.GenericAPIView):
 
             purple_pay_factory_contract_address_qs = PurplePayFactoryContract.objects.filter(
                 blockchain_network=blockchain_network.id)
-            print_statement_with_line('views', '1105', 'purple_pay_factory_contract_address_qs', purple_pay_factory_contract_address_qs)
+            print_statement_with_line('views', '1105', 'purple_pay_factory_contract_address_qs',
+                                      purple_pay_factory_contract_address_qs)
             if not purple_pay_factory_contract_address_qs:
                 response['message'] = PURPLE_PAY_FACTORY_CONTRACT_UNAVAILABLE
                 return Response(response, status=status.HTTP_200_OK)
@@ -404,13 +445,16 @@ class PaymentBurnerAddressGetCreateUpdate3(generics.GenericAPIView):
                 #     exchange_rate_current_currency_per_btc = exchange_rates.get(currency.coingecko_id)
                 # if exchange_rate_current_currency_per_btc is None:
                 #     continue
-                exchange_rate_current_currency_per_usd = exchange_rates_vs_1usd_res.get(currency.coingecko_id, {'usd': None}).get('usd', None)
+                exchange_rate_current_currency_per_usd = exchange_rates_vs_1usd_res.get(currency.coingecko_id,
+                                                                                        {'usd': None}).get('usd', None)
                 if exchange_rate_current_currency_per_usd is None:
                     continue
                 amount_in_current_currency = order_amount / exchange_rate_current_currency_per_usd
-                amount_in_current_currency_as_smallest_unit = int(amount_in_current_currency * (10 ** currency.decimals))
+                amount_in_current_currency_as_smallest_unit = int(
+                    amount_in_current_currency * (10 ** currency.decimals))
                 # print('603', amount_in_current_currency_as_smallest_unit)
-                print_statement_with_line('views', '1130', 'purple_pay_factory_contract_address_qs[0].address', purple_pay_factory_contract_address_qs[0].address)
+                print_statement_with_line('views', '1130', 'purple_pay_factory_contract_address_qs[0].address',
+                                          purple_pay_factory_contract_address_qs[0].address)
                 print_statement_with_line('views', '1131', 'purple_pay_factory_contract_address_qs[0].contract_abi',
                                           purple_pay_factory_contract_address_qs[0].contract_abi)
                 print_statement_with_line('views', '1132', 'chain_id', chain_id)
@@ -418,14 +462,16 @@ class PaymentBurnerAddressGetCreateUpdate3(generics.GenericAPIView):
                 contract = create_contract_instance(purple_pay_factory_contract_address_qs[0].address,
                                                     purple_pay_factory_contract_address_qs[0].contract_abi, chain_id)
 
-                purple_pay_multisig_address_qs = PurplePayMultisigContract.objects.filter(blockchain_network=blockchain_network.id)
+                purple_pay_multisig_address_qs = PurplePayMultisigContract.objects.filter(
+                    blockchain_network=blockchain_network.id)
 
-                print_statement_with_line('views', '1140', 'purple_pay_multisig_address_qs', purple_pay_multisig_address_qs)
+                print_statement_with_line('views', '1140', 'purple_pay_multisig_address_qs',
+                                          purple_pay_multisig_address_qs)
 
                 burner_contract_address = get_burner_contract_address(
                     contract, payment_id, currency_token_address, amount_in_current_currency_as_smallest_unit,
                     user_scw_final_address_to,
-                    purple_pay_multisig_address_qs[0].address)    # ToDo - maintain a mapping of merchant SCW to network
+                    purple_pay_multisig_address_qs[0].address)  # ToDo - maintain a mapping of merchant SCW to network
                 print_statement_with_line('views', '1146', 'burner_contract_address', burner_contract_address)
                 data = {
                     "payment_id": payment_id,
@@ -528,10 +574,12 @@ class PaymentBurnerAddressVerifyDetail4(generics.GenericAPIView):
 
                     # fetch balance of given address
                     if token_instance.currency_type.name.lower() == 'native':
-                        amount_in_burner_address = get_burner_address_balance_native(burner_address, blockchain_network.chain_id)
+                        amount_in_burner_address = get_burner_address_balance_native(burner_address,
+                                                                                     blockchain_network.chain_id)
                     else:
                         amount_in_burner_address = get_burner_address_balance(burner_address, token_instance,
-                                                                              erc20_token_abi, blockchain_network.chain_id)
+                                                                              erc20_token_abi,
+                                                                              blockchain_network.chain_id)
                     print("LINE 1931")
                     if payment_burner_address_obj.order_amount * (
                             10 ** token_instance.decimals) <= amount_in_burner_address:
@@ -843,7 +891,8 @@ class PaymentBurnerAddressSampleGetCreateUpdate(generics.GenericAPIView):
 
             request.data['user'] = None
             request.data['final_address_to'] = connected_wallet_address
-            request.data['currency'] = Currency.objects.get(symbol_primary=request.data.get('currency', 'usd').upper()).id
+            request.data['currency'] = Currency.objects.get(
+                symbol_primary=request.data.get('currency', 'usd').upper()).id
 
             payment_status_in_progress = PaymentStatus.objects.get(name=PAYMENT_STATUS_IN_PROGRESS)
             request.data['payment_status'] = payment_status_in_progress.id
@@ -868,7 +917,8 @@ class PaymentBurnerAddressSampleGetCreateUpdate(generics.GenericAPIView):
             # All tokens
 
             # all currencies qs for requested network
-            all_currencies_qs = Currency.objects.exclude(currency_type__name='Fiat').filter(blockchain_network=blockchain_network.id)
+            all_currencies_qs = Currency.objects.exclude(currency_type__name='Fiat').filter(
+                blockchain_network=blockchain_network.id)
 
             print_statement_with_line('views', '1084', 'all_currencies_qs', all_currencies_qs)
             #
@@ -890,7 +940,8 @@ class PaymentBurnerAddressSampleGetCreateUpdate(generics.GenericAPIView):
 
             purple_pay_factory_contract_address_qs = PurplePayFactoryContract.objects.filter(
                 blockchain_network=blockchain_network.id)
-            print_statement_with_line('views', '1105', 'purple_pay_factory_contract_address_qs', purple_pay_factory_contract_address_qs)
+            print_statement_with_line('views', '1105', 'purple_pay_factory_contract_address_qs',
+                                      purple_pay_factory_contract_address_qs)
             if not purple_pay_factory_contract_address_qs:
                 response['message'] = PURPLE_PAY_FACTORY_CONTRACT_UNAVAILABLE
                 return Response(response, status=status.HTTP_200_OK)
@@ -918,13 +969,16 @@ class PaymentBurnerAddressSampleGetCreateUpdate(generics.GenericAPIView):
                 #     exchange_rate_current_currency_per_btc = exchange_rates.get(currency.coingecko_id)
                 # if exchange_rate_current_currency_per_btc is None:
                 #     continue
-                exchange_rate_current_currency_per_usd = exchange_rates_vs_1usd_res.get(currency.coingecko_id, {'usd': None}).get('usd', None)
+                exchange_rate_current_currency_per_usd = exchange_rates_vs_1usd_res.get(currency.coingecko_id,
+                                                                                        {'usd': None}).get('usd', None)
                 if exchange_rate_current_currency_per_usd is None:
                     continue
                 amount_in_current_currency = order_amount / exchange_rate_current_currency_per_usd
-                amount_in_current_currency_as_smallest_unit = int(amount_in_current_currency * (10 ** currency.decimals))
+                amount_in_current_currency_as_smallest_unit = int(
+                    amount_in_current_currency * (10 ** currency.decimals))
                 # print('603', amount_in_current_currency_as_smallest_unit)
-                print_statement_with_line('views', '1130', 'purple_pay_factory_contract_address_qs[0].address', purple_pay_factory_contract_address_qs[0].address)
+                print_statement_with_line('views', '1130', 'purple_pay_factory_contract_address_qs[0].address',
+                                          purple_pay_factory_contract_address_qs[0].address)
                 print_statement_with_line('views', '1131', 'purple_pay_factory_contract_address_qs[0].contract_abi',
                                           purple_pay_factory_contract_address_qs[0].contract_abi)
                 print_statement_with_line('views', '1132', 'chain_id', chain_id)
@@ -932,14 +986,16 @@ class PaymentBurnerAddressSampleGetCreateUpdate(generics.GenericAPIView):
                 contract = create_contract_instance(purple_pay_factory_contract_address_qs[0].address,
                                                     purple_pay_factory_contract_address_qs[0].contract_abi, chain_id)
 
-                purple_pay_multisig_address_qs = PurplePayMultisigContract.objects.filter(blockchain_network=blockchain_network.id)
+                purple_pay_multisig_address_qs = PurplePayMultisigContract.objects.filter(
+                    blockchain_network=blockchain_network.id)
 
-                print_statement_with_line('views', '1140', 'purple_pay_multisig_address_qs', purple_pay_multisig_address_qs)
+                print_statement_with_line('views', '1140', 'purple_pay_multisig_address_qs',
+                                          purple_pay_multisig_address_qs)
 
                 burner_contract_address = get_burner_contract_address(
                     contract, payment_id, currency_token_address, amount_in_current_currency_as_smallest_unit,
                     user_scw_final_address_to,
-                    purple_pay_multisig_address_qs[0].address)    # ToDo - maintain a mapping of merchant SCW to network
+                    purple_pay_multisig_address_qs[0].address)  # ToDo - maintain a mapping of merchant SCW to network
                 print_statement_with_line('views', '1146', 'burner_contract_address', burner_contract_address)
                 data = {
                     "payment_id": payment_id,
@@ -1042,10 +1098,12 @@ class PaymentBurnerAddressSampleVerifyDetail(generics.GenericAPIView):
 
                     # fetch balance of given address
                     if token_instance.currency_type.name.lower() == 'native':
-                        amount_in_burner_address = get_burner_address_balance_native(burner_address, blockchain_network.chain_id)
+                        amount_in_burner_address = get_burner_address_balance_native(burner_address,
+                                                                                     blockchain_network.chain_id)
                     else:
                         amount_in_burner_address = get_burner_address_balance(burner_address, token_instance,
-                                                                              erc20_token_abi, blockchain_network.chain_id)
+                                                                              erc20_token_abi,
+                                                                              blockchain_network.chain_id)
                     print("LINE 1931")
                     if payment_burner_address_obj.order_amount * (
                             10 ** token_instance.decimals) <= amount_in_burner_address:
@@ -1320,5 +1378,3 @@ class PaymentBurnerAddressSampleVerifyDetail(generics.GenericAPIView):
             response['payment_status'] = None
             response['message'] = str(e)
             return Response(response, status=status.HTTP_400_BAD_REQUEST)
-
-
