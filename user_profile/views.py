@@ -178,6 +178,7 @@ class UserSmartContractWalletAddressGetCreateUpdateDelete(generics.GenericAPIVie
             return Response(response, status=status.HTTP_200_OK)
 
         except Exception as e:
+            response['data']['id'] = None
             response['message'] = PROFILE_DOES_NOT_EXIST
             response['error'] = str(e)
             logger.info(response)
