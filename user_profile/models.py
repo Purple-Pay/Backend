@@ -41,9 +41,6 @@ class UserSmartContractWalletAddress(PrimaryUUIDTimeStampedModel):
     blockchain_network = models.ForeignKey(BlockchainNetwork, on_delete=models.CASCADE,
                                            related_name="user_scw_addresses",
                                            blank=True, null=True)
-    currency = models.ForeignKey(Currency, on_delete=models.CASCADE,
-                                 related_name="user_scw_addresses",
-                                 blank=True, null=True)
 
     def __str__(self):
         return f"Id::{str(self.id)}::::UserId::{str(self.user)}"
