@@ -22,7 +22,8 @@ TEMP_BASE_PATH = Path(__file__).resolve().parent.parent.parent
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
 
 AUTH_USER_MODEL = 'authentication.User'
-#CSRF_TRUSTED_ORIGINS = ['https://*.legitt.club']
+CSRF_TRUSTED_ORIGINS = ['https://*.purplepay.app']
+CORS_ALLOW_ALL_ORIGINS = True
 
 # Application definition
 
