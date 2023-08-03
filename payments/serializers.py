@@ -1,5 +1,5 @@
 from .models import (
-    PaymentType, Currency, Payment, PaymentSession, PaymentStatus,
+    PaymentType, Currency, Payment, PaymentSession, PaymentStatus, BlockchainNetwork, BlockchainNetworkType,
     PaymentBurner, PaymentBurnerAddress, PaymentBurnerSample, PaymentBurnerAddressSample)
 from rest_framework import serializers
 from authentication.models import User
@@ -24,6 +24,20 @@ class CurrencySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Currency
+        fields = '__all__'
+
+
+class BlockchainNetworkSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = BlockchainNetwork
+        fields = '__all__'
+
+
+class BlockchainNetworkTypeSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = BlockchainNetworkType
         fields = '__all__'
 
 

@@ -1,6 +1,6 @@
 from django.contrib import admin
 from .models import (Payment, PaymentStatus, PaymentType, Currency,
-                     CurrencyType, BlockchainNetwork, PaymentBurner,
+                     CurrencyType, BlockchainNetwork, BlockchainNetworkType, PaymentBurner,
                      PaymentBurnerAddress, PurplePayFactoryContract,
                      PurplePayMultisigContract, PaymentBurnerSample, PaymentBurnerAddressSample)
 
@@ -11,6 +11,7 @@ admin.site.register(PaymentType)
 admin.site.register(Currency)
 admin.site.register(CurrencyType)
 admin.site.register(BlockchainNetwork)
+admin.site.register(BlockchainNetworkType)
 admin.site.register(PaymentBurner)
 admin.site.register(PaymentBurnerAddress)
 admin.site.register(PaymentBurnerSample)
