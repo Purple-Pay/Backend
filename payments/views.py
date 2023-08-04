@@ -117,6 +117,15 @@ class ChainConfigGet(generics.GenericAPIView):
                 response_obj['id'] = chain_obj.chain_id
                 response_obj['name'] = chain_obj.name
                 response_obj['network'] = chain_obj.network
+                response_obj['nativeCurrency'] = dict()
+
+                native_currency_qs = chain_obj.currencies.filter(currency_type__name='Native')
+                if native_currency_qs:
+                    native_currency_obj = native_currency_qs[0]
+                    response_obj['nativeCurrency'] = dict(name=native_currency_obj.name,
+                                                          symbol=native_currency_obj.symbol_primary,
+                                                          decimals=native_currency_obj.decimals
+                                                          )
                 rpc_default = chain_obj.rpc_default.url
 
                 rpc_public_qs = chain_obj.rpc_public.all()
