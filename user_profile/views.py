@@ -53,19 +53,27 @@ class UserProfileGetCreateUpdateDelete(generics.GenericAPIView):
 
             # user_obj = User.objects.get(id=user_id)
             # user_obj = User.objects.get(id=user_id)
-            if request.data['first_name'] is None:
+            if not request.data['first_name'] or request.data['first_name'] is None:
                 response["message"] = "First Name is missing"
-                return response
-            if request.data['last_name'] is None:
+                return Response(response, status=status.HTTP_400_BAD_REQUEST)
+            if not request.data['last_name'] or request.data['last_name'] is None:
                 response["message"] = "Last Name is missing"
-                return response
-            if request.data['location'] is None:
+                return Response(response, status=status.HTTP_400_BAD_REQUEST)
+            if not request.data['location'] or request.data['location'] is None:
                 response["message"] = "Location is missing"
-                return response
-            if request.data['company'] is None:
+                return Response(response, status=status.HTTP_400_BAD_REQUEST)
+            if not request.data['company'] or request.data['company'] is None:
                 response["message"] = "Company is missing"
-                return response
+                return Response(response, status=status.HTTP_400_BAD_REQUEST)
+            if not request.data['default_network'] or request.data['default_network'] is None:
+                response["message"] = "Default Network is missing"
+                return Response(response, status=status.HTTP_400_BAD_REQUEST)
 
+            blockchain_qs = BlockchainNetwork.objects.filter(chain_id=request.data['default_network'])
+            if not blockchain_qs:
+                response["message"] = "Default Network is Invalid"
+                return Response(response, status=status.HTTP_400_BAD_REQUEST)
+            request.data['default_network'] = blockchain_qs[0].id
             serializer = self.serializer_class(data=request.data)
 
             if serializer.is_valid():
@@ -75,6 +83,7 @@ class UserProfileGetCreateUpdateDelete(generics.GenericAPIView):
                 serializer.save()
 
                 data = serializer.data
+                data['default_network'] = request.data['default_network']
                 response['data'] = data
                 # response['data']['phone_number'] = str(user_obj.phone_number)
                 response['message'] = GET_PROFILE_SUCCESS

@@ -28,6 +28,8 @@ class UserProfile(PrimaryUUIDTimeStampedModel):
     user_smart_contract_wallet_address = models.CharField(_('smart_contract_wallet_address'), max_length=300,
                                                           blank=True, null=True)
     company_url = models.CharField(_('company_url'), max_length=512, blank=True, null=True)
+    default_network = models.ForeignKey(BlockchainNetwork, on_delete=models.SET_NULL,
+                                        related_name="user_profiles", null=True, blank=True)
 
     def __str__(self):
         return f"Id::{str(self.id)}::::UserId::{str(self.user)}::::UserType::{str(self.user_type)}"
