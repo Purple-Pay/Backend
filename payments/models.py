@@ -50,6 +50,7 @@ class BlockchainNetwork(PrimaryUUIDTimeStampedModel):
                                     blank=True, null=True)
     blockexplorer_public = models.ManyToManyField(BlockExplorer, related_name="blockchain_network_public",
                                         blank=True)
+    is_active = models.BooleanField(default=False)
 
     def __str__(self):
         return f"Id::{str(self.id)}::::Name::{str(self.name)}::::ChainId::{str(self.chain_id)}"

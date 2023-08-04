@@ -105,10 +105,10 @@ class ChainConfigGet(generics.GenericAPIView):
         try:
             deployed_env = os.environ.get('BUILD_ENV', 'dev')
             if deployed_env == 'dev':
-                chain_qs = BlockchainNetwork.objects.filter(network_type__name=TESTNET)
+                chain_qs = BlockchainNetwork.objects.filter(network_type__name=TESTNET).filter(is_active=True)
                 testnet = True
             else:
-                chain_qs = BlockchainNetwork.objects.filter(network_type__name=MAINNET)
+                chain_qs = BlockchainNetwork.objects.filter(network_type__name=MAINNET).filter(is_active=True)
                 testnet = False
 
             for chain_obj in chain_qs:
@@ -126,21 +126,26 @@ class ChainConfigGet(generics.GenericAPIView):
                                                           symbol=native_currency_obj.symbol_primary,
                                                           decimals=native_currency_obj.decimals
                                                           )
-                rpc_default = chain_obj.rpc_default.url
+                response_obj['rpcUrls'] = {}
+                response_obj['blockExplorers'] = {}
+                if chain_obj.rpc_default is not None:
+                    rpc_default = chain_obj.rpc_default.url
 
-                rpc_public_qs = chain_obj.rpc_public.all()
-                rpc_public_urls = [element.url for element in rpc_public_qs]
+                    rpc_public_qs = chain_obj.rpc_public.all()
+                    rpc_public_urls = [element.url for element in rpc_public_qs]
 
-                response_obj['rpcUrls'] = {
-                    'default': rpc_default,
-                    'public': rpc_public_urls
-                }
-                response_obj['blockExplorers'] = {
-                    'default': {
-                        'name': chain_obj.blockexplorer_default.name,
-                        'url': chain_obj.blockexplorer_default.url
+                    response_obj['rpcUrls'] = {
+                        'default': {'http': [rpc_default]},
+                        'public': {'http': rpc_public_urls}
                     }
-                }
+                if chain_obj.blockexplorer_default is not None:
+                    response_obj['blockExplorers'] = {
+                        'default': {
+                            'name': chain_obj.blockexplorer_default.name,
+                            'url': chain_obj.blockexplorer_default.url
+                        }
+                    }
+
                 response_obj['testnet'] = testnet
                 response['data']['chain_details'].append(response_obj)
             response['message'] = 'Successfully fetched chain details'
