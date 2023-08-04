@@ -96,6 +96,53 @@ def get_chain_ids_by_env():
     return chain_ids, TESTNET
 
 
+class ChainConfigGet(generics.GenericAPIView):
+    permission_classes = [AllowAny, ]
+
+    def get(self, request):
+        """Return all chain details for the given environment"""
+        response = dict(data=dict(chain_details=[]), message="", error="")
+        try:
+            deployed_env = os.environ.get('BUILD_ENV', 'dev')
+            if deployed_env == 'dev':
+                chain_qs = BlockchainNetwork.objects.filter(network_type__name=TESTNET)
+                testnet = True
+            else:
+                chain_qs = BlockchainNetwork.objects.filter(network_type__name=MAINNET)
+                testnet = False
+
+            for chain_obj in chain_qs:
+                response_obj = dict()
+
+                response_obj['id'] = chain_obj.chain_id
+                response_obj['name'] = chain_obj.name
+                response_obj['network'] = chain_obj.network
+                rpc_default = chain_obj.rpc_default.url
+
+                rpc_public_qs = chain_obj.rpc_public.all()
+                rpc_public_urls = [element.url for element in rpc_public_qs]
+
+                response_obj['rpcUrls'] = {
+                    'default': rpc_default,
+                    'public': rpc_public_urls
+                }
+                response_obj['blockExplorers'] = {
+                    'default': {
+                        'name': chain_obj.blockexplorer_default.name,
+                        'url': chain_obj.blockexplorer_default.url
+                    }
+                }
+                response_obj['testnet'] = testnet
+                response['data']['chain_details'].append(response_obj)
+            response['message'] = 'Successfully fetched chain details'
+            return Response(response, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            response['message'] = 'Could not fetch chain details'
+            response['error'] = str(e)
+            return Response(response, status=status.HTTP_400_BAD_REQUEST)
+
+
 class PaymentList(generics.GenericAPIView):
     permission_classes = [IsAuthenticated | IsAdminUser, ]
     serializers = {
