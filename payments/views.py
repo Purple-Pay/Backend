@@ -114,7 +114,7 @@ class ChainConfigGet(generics.GenericAPIView):
             for chain_obj in chain_qs:
                 response_obj = dict()
 
-                response_obj['id'] = chain_obj.chain_id
+                response_obj['id'] = int(chain_obj.chain_id)
                 response_obj['name'] = chain_obj.name
                 response_obj['network'] = chain_obj.network
                 response_obj['nativeCurrency'] = dict()
