@@ -141,6 +141,7 @@ class PaymentBurnerAddress(PrimaryUUIDTimeStampedModel):
                                  blank=True, null=True)
     burner_address = models.CharField(_('burner address'), max_length=512, blank=True, null=True)
     order_amount = models.FloatField(blank=True, null=True)
+    conversion_rate_in_usd = models.CharField(_('conversion rate in usd'), max_length=512, blank=True, null=True)
     payment_status = models.ForeignKey(PaymentStatus, on_delete=models.CASCADE, related_name="payment_burner_addresses",
                                        blank=True, null=True)
     is_used_for_payment = models.BooleanField(default=False)

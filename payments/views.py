@@ -541,6 +541,7 @@ class PaymentBurnerAddressGetCreateUpdate3(generics.GenericAPIView):
                     "order_amount": amount_in_current_currency,
                     "payment_status": PaymentStatus.objects.get(name="In Progress").id,
                     "is_used_for_payment": False,
+                    "conversion_rate_in_usd": exchange_rate_current_currency_per_usd
                 }
 
                 burner_address_serializer = self.get_serializer_class('payment_burner_address')(data=data)
@@ -748,6 +749,7 @@ class PaymentBurnerAddressVerifyDetail4(generics.GenericAPIView):
                             token['chain_name'] = element.currency.blockchain_network.name
                             token['decimals'] = element.currency.decimals
                             token['image_url'] = element.currency.asset_url
+                            token['conversion_rate'] = element.conversion_rate_in_usd
                             token[
                                 "transfer_to_merchant_transaction_hash"] = element.transfer_to_merchant_transaction_hash
                             token["burner_contract_deploy_status"] = element.burner_contract_deploy_status
@@ -780,6 +782,7 @@ class PaymentBurnerAddressVerifyDetail4(generics.GenericAPIView):
                         token['chain_name'] = element.currency.blockchain_network.name
                         token['decimals'] = element.currency.decimals
                         token['image_url'] = element.currency.asset_url
+                        token['conversion_rate'] = element.conversion_rate_in_usd
                         token["transfer_to_merchant_transaction_hash"] = element.transfer_to_merchant_transaction_hash
                         token["burner_contract_deploy_status"] = element.burner_contract_deploy_status
                         token["burner_contract_deploy_failure_reason"] = element.burner_contract_deploy_failure_reason
@@ -895,6 +898,7 @@ class PaymentBurnerAddressVerifyDetail4(generics.GenericAPIView):
                     token['chain_name'] = element.currency.blockchain_network.name
                     token['decimals'] = element.currency.decimals
                     token['image_url'] = element.currency.asset_url
+                    token['conversion_rate'] = element.conversion_rate_in_usd
                     token["transfer_to_merchant_transaction_hash"] = element.transfer_to_merchant_transaction_hash
                     token["burner_contract_deploy_status"] = element.burner_contract_deploy_status
                     token["burner_contract_deploy_failure_reason"] = element.burner_contract_deploy_failure_reason
