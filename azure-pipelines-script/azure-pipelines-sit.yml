@@ -1,6 +1,6 @@
 # Starter pipeline
 trigger:
-- staging:
+- staging
 
 resources:
 - repo: self

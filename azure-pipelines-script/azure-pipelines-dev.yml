@@ -1,6 +1,6 @@
 # Starter pipeline
 trigger:
-- development:
+- development
 
 resources:
 - repo: self
