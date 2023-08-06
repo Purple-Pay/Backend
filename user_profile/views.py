@@ -70,6 +70,7 @@ class UserProfileGetCreateUpdateDelete(generics.GenericAPIView):
                 return Response(response, status=status.HTTP_400_BAD_REQUEST)
 
             blockchain_qs = BlockchainNetwork.objects.filter(chain_id=request.data['default_network'])
+            default_network_chain_id = request.data['default_network']
             if not blockchain_qs:
                 response["message"] = "Default Network is Invalid"
                 return Response(response, status=status.HTTP_400_BAD_REQUEST)
@@ -83,7 +84,7 @@ class UserProfileGetCreateUpdateDelete(generics.GenericAPIView):
                 serializer.save()
 
                 data = serializer.data
-                data['default_network'] = request.data['default_network']
+                data['default_network'] = default_network_chain_id
                 response['data'] = data
                 # response['data']['phone_number'] = str(user_obj.phone_number)
                 response['message'] = GET_PROFILE_SUCCESS
