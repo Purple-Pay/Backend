@@ -25,6 +25,9 @@ jobs:
   - script: echo $(PurplePayNewVersion)
     displayName: 'Print New Version'
 
+  - script: git push origin HEAD:development
+    displayName: 'Push updated version'
+
   - script: docker login -u $(DOCKER_USER) -p $(DOCKER_PASS) $(DOCKER_REPO)
     displayName: 'docker login'
 

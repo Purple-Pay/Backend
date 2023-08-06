@@ -19,7 +19,6 @@ new_version="$major.$minor.$patch"
 echo "$new_version" > VERSION
 git add VERSION
 git commit -m "updated version value"
-git push
 
 # Output the new version to be used as a variable in the pipeline
 echo "##vso[task.setvariable variable=PurplePayNewVersion]$new_version"
