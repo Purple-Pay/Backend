@@ -16,6 +16,9 @@ jobs:
   - group: 'Build Dev Configuration'
 
   steps:
+  - script: chmod +x ./update_version.sh
+    displayName: 'Give file permission'
+
   - script: ./update_version.sh
     displayName: 'Update Version'
 
