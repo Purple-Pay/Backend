@@ -1,8 +1,9 @@
 from datetime import datetime
 import os
+from pathlib import Path
 
-BASE_DIR_LOGGER = "/var/log/purple_pay/"
-#BASE_DIR_LOGGER = "/Users/paruljuniwal/Desktop/test/purplepay_logger/"
+DEFAULT_PATH = os.path.join(Path(__file__).resolve().parent.parent.parent, 'purplepay_logger/')
+BASE_DIR_LOGGER = os.environ.get('BASE_DIR_LOGGER', DEFAULT_PATH) #"/var/log/purple_pay/" for deployment
 LOGGER_WHEN = 'H'
 LOGGER_INTERVAL = 24
 LOGGER_BACKUPCOUNT = 15

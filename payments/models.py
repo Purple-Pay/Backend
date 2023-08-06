@@ -2,6 +2,7 @@ from django.db import models
 from commons.models import PrimaryUUIDTimeStampedModel
 from authentication.models import User
 from django.utils.translation import gettext_lazy as _
+from django.contrib.postgres.fields import ArrayField
 
 
 # Create your models here.
@@ -12,9 +13,44 @@ class PaymentType(PrimaryUUIDTimeStampedModel):
         return f"Id::{str(self.id)}::::Name::{str(self.name)}"
 
 
+class BlockchainNetworkType(PrimaryUUIDTimeStampedModel):
+    name = models.CharField(_('network type name'), max_length=100, blank=True, null=True)
+
+    def __str__(self):
+        return f"Id::{str(self.id)}::::Name::{str(self.name)}"
+
+
+class RPC(PrimaryUUIDTimeStampedModel):
+    name = models.CharField(_('RPCUrl Name'), max_length=100, blank=True, null=True)
+    url = models.CharField(_('URL'), max_length=1024, blank=True, null=True)
+
+    def __str__(self):
+        return f"Id::{str(self.id)}::::Name::{str(self.name)}"
+
+
+class BlockExplorer(PrimaryUUIDTimeStampedModel):
+    name = models.CharField(_('blockchain name'), max_length=100, blank=True, null=True)
+    url = models.CharField(_('URL'), max_length=1024, blank=True, null=True)
+
+    def __str__(self):
+        return f"Id::{str(self.id)}::::Name::{str(self.name)}"
+
+
 class BlockchainNetwork(PrimaryUUIDTimeStampedModel):
-    name = models.CharField(_('blockchain network'), max_length=100, blank=True, null=True)
+    name = models.CharField(_('blockchain name'), max_length=100, blank=True, null=True)
+    network = models.CharField(_('blockchain network'), max_length=100, blank=True, null=True)
     chain_id = models.CharField(_('chain id'), max_length=100, blank=True, null=True)
+    network_type = models.ForeignKey(BlockchainNetworkType, on_delete=models.SET_NULL,
+                                     related_name="blockchain_networks", blank=True, null=True)
+    rpc_default = models.ForeignKey(RPC, on_delete=models.SET_NULL, related_name="blockchain_network_default",
+                               blank=True, null=True)
+    rpc_public = models.ManyToManyField(RPC, related_name="blockchain_network_public",
+                                        blank=True)
+    blockexplorer_default = models.ForeignKey(BlockExplorer, on_delete=models.SET_NULL, related_name="blockchain_network_default",
+                                    blank=True, null=True)
+    blockexplorer_public = models.ManyToManyField(BlockExplorer, related_name="blockchain_network_public",
+                                        blank=True)
+    is_active = models.BooleanField(default=False)
 
     def __str__(self):
         return f"Id::{str(self.id)}::::Name::{str(self.name)}::::ChainId::{str(self.chain_id)}"
@@ -33,8 +69,10 @@ class Currency(PrimaryUUIDTimeStampedModel):
     symbol_primary = models.CharField(_('symbol primary'), max_length=10, blank=True, null=True)
     symbol_aliases = models.CharField(_('symbol aliases'), max_length=100, blank=True, null=True)
     coingecko_id = models.CharField(_('coingecko id'), max_length=100, blank=True, null=True)
-    currency_type = models.ForeignKey(CurrencyType, on_delete=models.CASCADE, related_name="currencies", blank=True, null=True)
-    blockchain_network = models.ForeignKey(BlockchainNetwork, on_delete=models.CASCADE, related_name="currencies", blank=True, null=True)
+    currency_type = models.ForeignKey(CurrencyType, on_delete=models.CASCADE, related_name="currencies", blank=True,
+                                      null=True)
+    blockchain_network = models.ForeignKey(BlockchainNetwork, on_delete=models.CASCADE, related_name="currencies",
+                                           blank=True, null=True)
     token_address_on_network = models.CharField(_('token address on network'), max_length=512, blank=True, null=True)
     decimals = models.IntegerField(blank=True, null=True)
     asset_url = models.CharField(_('Currency Logo'), max_length=512, blank=True, null=True)
@@ -74,13 +112,16 @@ class Payment(PrimaryUUIDTimeStampedModel):
 class PaymentBurner(PrimaryUUIDTimeStampedModel):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="payment_burners")
     user_order_id = models.CharField(_('User Order Id'), max_length=200, blank=True, null=True)
-    payment_type = models.ForeignKey(PaymentType, on_delete=models.CASCADE, related_name="payment_burners", blank=True, null=True)
+    payment_type = models.ForeignKey(PaymentType, on_delete=models.CASCADE, related_name="payment_burners", blank=True,
+                                     null=True)
     address_from = models.CharField(_('Address From'), max_length=200, blank=True, null=True)
     burner_address_to = models.CharField(_('Burner Address To'), max_length=200, blank=True, null=True)
     final_address_to = models.CharField(_('Final Address To'), max_length=200, blank=True, null=True)
     order_amount = models.FloatField(blank=True, null=True)
-    currency = models.ForeignKey(Currency, on_delete=models.CASCADE, related_name="payment_burners", blank=True, null=True)
-    payment_status = models.ForeignKey(PaymentStatus, on_delete=models.CASCADE, related_name="payment_burners", blank=True, null=True)
+    currency = models.ForeignKey(Currency, on_delete=models.CASCADE, related_name="payment_burners", blank=True,
+                                 null=True)
+    payment_status = models.ForeignKey(PaymentStatus, on_delete=models.CASCADE, related_name="payment_burners",
+                                       blank=True, null=True)
     transaction_hash = models.CharField(_('Transaction Hash'), max_length=512, blank=True, null=True)
     initial_block_number = models.CharField(_('Initial Block Number'), max_length=512, blank=True, null=True)
     transaction_block_number = models.CharField(_('Transaction Block Number'), max_length=512, blank=True, null=True)
@@ -94,17 +135,24 @@ class PaymentBurner(PrimaryUUIDTimeStampedModel):
 
 
 class PaymentBurnerAddress(PrimaryUUIDTimeStampedModel):
-    payment_id = models.ForeignKey(PaymentBurner, on_delete=models.CASCADE, related_name="payment_burner_addresses", blank=True, null=True)
-    currency = models.ForeignKey(Currency, on_delete=models.CASCADE, related_name="payment_burner_addresses", blank=True, null=True)
+    payment_id = models.ForeignKey(PaymentBurner, on_delete=models.CASCADE, related_name="payment_burner_addresses",
+                                   blank=True, null=True)
+    currency = models.ForeignKey(Currency, on_delete=models.CASCADE, related_name="payment_burner_addresses",
+                                 blank=True, null=True)
     burner_address = models.CharField(_('burner address'), max_length=512, blank=True, null=True)
     order_amount = models.FloatField(blank=True, null=True)
+    conversion_rate_in_usd = models.CharField(_('conversion rate in usd'), max_length=512, blank=True, null=True)
     payment_status = models.ForeignKey(PaymentStatus, on_delete=models.CASCADE, related_name="payment_burner_addresses",
                                        blank=True, null=True)
     is_used_for_payment = models.BooleanField(default=False)
 
-    transfer_to_merchant_transaction_hash = models.CharField(_('Transfer to Merchant Tx Hash'), max_length=512, blank=True, null=True)
-    burner_contract_deploy_status = models.CharField(_('Burner Contract Deploy Status'), max_length=100, blank=True, null=True, default='not deploy')
-    burner_contract_deploy_failure_reason = models.CharField(_('Deploy Fail Reason'), max_length=512, blank=True, null=True)
+    transfer_to_merchant_transaction_hash = models.CharField(_('Transfer to Merchant Tx Hash'), max_length=512,
+                                                             blank=True, null=True)
+    burner_contract_deploy_status = models.CharField(_('Burner Contract Deploy Status'), max_length=100, blank=True,
+                                                     null=True, default='not deploy')
+    burner_contract_deploy_failure_reason = models.CharField(_('Deploy Fail Reason'), max_length=512, blank=True,
+                                                             null=True)
+
     # transaction_hash = models.CharField(_('Transaction Hash'), max_length=512, blank=True, null=True)
 
     def __str__(self):
@@ -114,7 +162,8 @@ class PaymentBurnerAddress(PrimaryUUIDTimeStampedModel):
 class PurplePayFactoryContract(PrimaryUUIDTimeStampedModel):
     name = models.CharField(_('Purple Pay Factory Contract Name'), max_length=512, blank=True, null=True)
     address = models.CharField(_('Purple Pay Factory Contract Address'), max_length=512, blank=True, null=True)
-    blockchain_network = models.ForeignKey(BlockchainNetwork, on_delete=models.CASCADE, related_name="purple_pay_factory_contract_addresses", blank=True, null=True)
+    blockchain_network = models.ForeignKey(BlockchainNetwork, on_delete=models.CASCADE,
+                                           related_name="purple_pay_factory_contract_addresses", blank=True, null=True)
     contract_abi = models.JSONField(null=True, blank=True)
     is_verified = models.BooleanField(default=False)
     is_audited = models.BooleanField(default=False)
@@ -127,7 +176,8 @@ class PurplePayFactoryContract(PrimaryUUIDTimeStampedModel):
 class PurplePayMultisigContract(PrimaryUUIDTimeStampedModel):
     name = models.CharField(_('Purple Pay Multisig Contract Name'), max_length=512, blank=True, null=True)
     address = models.CharField(_('Purple Pay Multisig Contract Address'), max_length=512, blank=True, null=True)
-    blockchain_network = models.ForeignKey(BlockchainNetwork, on_delete=models.CASCADE, related_name="purple_pay_multisig_contract_addresses", blank=True, null=True)
+    blockchain_network = models.ForeignKey(BlockchainNetwork, on_delete=models.CASCADE,
+                                           related_name="purple_pay_multisig_contract_addresses", blank=True, null=True)
     contract_abi = models.JSONField(null=True, blank=True)
     is_verified = models.BooleanField(default=False)
     is_audited = models.BooleanField(default=False)
@@ -147,20 +197,25 @@ class PaymentSession(PrimaryUUIDTimeStampedModel):
 
 
 class PaymentBurnerSample(PrimaryUUIDTimeStampedModel):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="payment_burner_samples", blank=True, null=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="payment_burner_samples", blank=True,
+                             null=True)
     user_order_id = models.CharField(_('User Order Id'), max_length=200, blank=True, null=True)
-    payment_type = models.ForeignKey(PaymentType, on_delete=models.CASCADE, related_name="payment_burner_samples", blank=True, null=True)
+    payment_type = models.ForeignKey(PaymentType, on_delete=models.CASCADE, related_name="payment_burner_samples",
+                                     blank=True, null=True)
     address_from = models.CharField(_('Address From'), max_length=200, blank=True, null=True)
     burner_address_to = models.CharField(_('Burner Address To'), max_length=200, blank=True, null=True)
     final_address_to = models.CharField(_('Final Address To'), max_length=200, blank=True, null=True)
     order_amount = models.FloatField(blank=True, null=True)
-    currency = models.ForeignKey(Currency, on_delete=models.CASCADE, related_name="payment_burner_samples", blank=True, null=True)
-    payment_status = models.ForeignKey(PaymentStatus, on_delete=models.CASCADE, related_name="payment_burner_samples", blank=True, null=True)
+    currency = models.ForeignKey(Currency, on_delete=models.CASCADE, related_name="payment_burner_samples", blank=True,
+                                 null=True)
+    payment_status = models.ForeignKey(PaymentStatus, on_delete=models.CASCADE, related_name="payment_burner_samples",
+                                       blank=True, null=True)
     transaction_hash = models.CharField(_('Transaction Hash'), max_length=512, blank=True, null=True)
     initial_block_number = models.CharField(_('Initial Block Number'), max_length=512, blank=True, null=True)
     transaction_block_number = models.CharField(_('Transaction Block Number'), max_length=512, blank=True, null=True)
     transaction_block_hash = models.CharField(_('Transaction Block Hash'), max_length=512, blank=True, null=True)
-    blockchain_network = models.ForeignKey(BlockchainNetwork, on_delete=models.CASCADE, related_name="payment_burner_samples",
+    blockchain_network = models.ForeignKey(BlockchainNetwork, on_delete=models.CASCADE,
+                                           related_name="payment_burner_samples",
                                            blank=True, null=True)
     description = models.CharField(_('Description'), max_length=512, blank=True, null=True)
 
@@ -169,17 +224,24 @@ class PaymentBurnerSample(PrimaryUUIDTimeStampedModel):
 
 
 class PaymentBurnerAddressSample(PrimaryUUIDTimeStampedModel):
-    payment_id = models.ForeignKey(PaymentBurnerSample, on_delete=models.CASCADE, related_name="payment_burner_address_samples", blank=True, null=True)
-    currency = models.ForeignKey(Currency, on_delete=models.CASCADE, related_name="payment_burner_sample_addresses", blank=True, null=True)
+    payment_id = models.ForeignKey(PaymentBurnerSample, on_delete=models.CASCADE,
+                                   related_name="payment_burner_address_samples", blank=True, null=True)
+    currency = models.ForeignKey(Currency, on_delete=models.CASCADE, related_name="payment_burner_sample_addresses",
+                                 blank=True, null=True)
     burner_address = models.CharField(_('burner address'), max_length=512, blank=True, null=True)
     order_amount = models.FloatField(blank=True, null=True)
-    payment_status = models.ForeignKey(PaymentStatus, on_delete=models.CASCADE, related_name="payment_burner_address_samples",
+    payment_status = models.ForeignKey(PaymentStatus, on_delete=models.CASCADE,
+                                       related_name="payment_burner_address_samples",
                                        blank=True, null=True)
     is_used_for_payment = models.BooleanField(default=False)
 
-    transfer_to_merchant_transaction_hash = models.CharField(_('Transfer to Merchant Tx Hash'), max_length=512, blank=True, null=True)
-    burner_contract_deploy_status = models.CharField(_('Burner Contract Deploy Status'), max_length=100, blank=True, null=True, default='not deploy')
-    burner_contract_deploy_failure_reason = models.CharField(_('Deploy Fail Reason'), max_length=512, blank=True, null=True)
+    transfer_to_merchant_transaction_hash = models.CharField(_('Transfer to Merchant Tx Hash'), max_length=512,
+                                                             blank=True, null=True)
+    burner_contract_deploy_status = models.CharField(_('Burner Contract Deploy Status'), max_length=100, blank=True,
+                                                     null=True, default='not deploy')
+    burner_contract_deploy_failure_reason = models.CharField(_('Deploy Fail Reason'), max_length=512, blank=True,
+                                                             null=True)
+
     # transaction_hash = models.CharField(_('Transaction Hash'), max_length=512, blank=True, null=True)
 
     def __str__(self):

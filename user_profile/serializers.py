@@ -24,7 +24,7 @@ class UserSmartContractWalletAddressSerializer(serializers.ModelSerializer):
     id = serializers.UUIDField(read_only=True)
     user = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
     blockchain_network = serializers.PrimaryKeyRelatedField(queryset=BlockchainNetwork.objects.all())
-    currency = serializers.PrimaryKeyRelatedField(queryset=Currency.objects.all())
+
 
     class Meta:
         model = UserSmartContractWalletAddress
