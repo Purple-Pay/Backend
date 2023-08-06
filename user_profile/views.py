@@ -84,7 +84,7 @@ class UserProfileGetCreateUpdateDelete(generics.GenericAPIView):
                 serializer.save()
 
                 data = serializer.data
-                data['default_network'] = default_network_chain_id
+                data['default_network'] = int(default_network_chain_id)
                 response['data'] = data
                 # response['data']['phone_number'] = str(user_obj.phone_number)
                 response['message'] = GET_PROFILE_SUCCESS
