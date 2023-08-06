@@ -1,7 +1,6 @@
 # Starter pipeline
 trigger:
 - development:
-- includeSourceBranch: false
 
 resources:
 - repo: self
