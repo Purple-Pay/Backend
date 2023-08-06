@@ -1,7 +1,7 @@
 # Starter pipeline
 trigger:
 - staging:
-   includeSourceBranch: false
+- includeSourceBranch: false
 
 resources:
 - repo: self
