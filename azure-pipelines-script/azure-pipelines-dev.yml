@@ -16,9 +16,6 @@ jobs:
   - group: 'Build Dev Configuration'
 
   steps:
-  - script: chmod +x ./update_version.sh
-    displayName: 'Give auto version increment file permission'
-
   - script: echo $(Build.BuildNumber)
     displayName: 'Print New build Version'
 
