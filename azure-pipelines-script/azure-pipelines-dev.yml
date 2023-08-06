@@ -16,14 +16,32 @@ jobs:
   - group: 'Build Dev Configuration'
 
   steps:
+  - script: ./update_version.sh
+    displayName: 'Update Version'
+
+  - script: echo $(PurplePayNewVersion)
+    displayName: 'Print New Version'
+
   - script: docker login -u $(DOCKER_USER) -p $(DOCKER_PASS) $(DOCKER_REPO)
     displayName: 'docker login'
 
-  - script: docker build -t $(STAGE)/$(IMAGE_NAME):$(IMAGE_TAG) .
+  - script: docker build -t $(STAGE)/$(IMAGE_NAME):$(PurplePayNewVersion) .
     displayName: 'docker build image'
 
-  - script: docker tag $(STAGE)/$(IMAGE_NAME):$(IMAGE_TAG) $(DOCKER_REPO)/$(STAGE)/$(IMAGE_NAME):$(IMAGE_TAG) 
+  - script: docker tag $(STAGE)/$(IMAGE_NAME):$(PurplePayNewVersion) $(DOCKER_REPO)/$(STAGE)/$(IMAGE_NAME):$(IMAGE_TAG)
     displayName: 'docker tag image'
   
   - script: docker push $(DOCKER_REPO)/$(STAGE)/$(IMAGE_NAME):$(IMAGE_TAG)
     displayName: 'docker push image into container registry'
+
+  - script: docker tag $(STAGE)/$(IMAGE_NAME):$(PurplePayNewVersion) $(DOCKER_REPO)/$(STAGE)/$(IMAGE_NAME):$(PurplePayNewVersion)
+    displayName: 'docker tag image'
+
+  - script: docker push $(DOCKER_REPO)/$(STAGE)/$(IMAGE_NAME):$(PurplePayNewVersion)
+    displayName: 'docker push image into container registry'
+
+  - task: PublishBuildArtifacts@1
+    displayName: 'Publish Artifact: VERSION'
+    inputs:
+      PathtoPublish: '$(System.DefaultWorkingDirectory)/VERSION'
+      artifactName: drop-build-repo-version
