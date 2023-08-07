@@ -39,7 +39,7 @@ BLOCKEXPLORER_URLS = {
     '137': {
         'name': 'polygon mainnet',
         'block_explorer': 'blastapi',
-        'base_url': 'https://polygon-mainnet.public.blastapi.io/',
+        'base_url': 'https://api.polygonscan.com/api',
         'api_key': ASHARAN_POLYGONSCAN_API_KEY
     },
     '80001': {
