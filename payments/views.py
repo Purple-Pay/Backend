@@ -510,9 +510,14 @@ class PaymentBurnerAddressGetCreateUpdate3(generics.GenericAPIView):
                                                                                         {'usd': None}).get('usd', None)
                 if exchange_rate_current_currency_per_usd is None:
                     continue
-                amount_in_current_currency = order_amount / exchange_rate_current_currency_per_usd
+                if currency.currency_type.name == 'Native':
+
+                    amount_in_current_currency = round(order_amount / exchange_rate_current_currency_per_usd, 18)
+                else:
+                    amount_in_current_currency = round(order_amount / exchange_rate_current_currency_per_usd, 6)
                 amount_in_current_currency_as_smallest_unit = int(
                     amount_in_current_currency * (10 ** currency.decimals))
+                # print('520', amount_in_current_currency, "::::", order_amount / exchange_rate_current_currency_per_usd)
                 # print('603', amount_in_current_currency_as_smallest_unit)
                 print_statement_with_line('views', '1130', 'purple_pay_factory_contract_address_qs[0].address',
                                           purple_pay_factory_contract_address_qs[0].address)
@@ -642,7 +647,15 @@ class PaymentBurnerAddressVerifyDetail4(generics.GenericAPIView):
                         amount_in_burner_address = get_burner_address_balance(burner_address, token_instance,
                                                                               erc20_token_abi,
                                                                               blockchain_network.chain_id)
-                    print("LINE 1931")
+                    # print("LINE 1931")
+                    # print("#" * 200)
+                    # print("#" * 200)
+                    # print("payment_burner_address_obj.order_amount::", payment_burner_address_obj.order_amount)
+                    # print("in 10^decimals", payment_burner_address_obj.order_amount * (
+                    #         10 ** token_instance.decimals))
+                    # print("amount_in_burner_address::", amount_in_burner_address)
+                    # print("#" * 200)
+                    # print("#" * 200)
                     if payment_burner_address_obj.order_amount * (
                             10 ** token_instance.decimals) <= amount_in_burner_address:
                         payment_completed_in_burner_address_flag = True
