@@ -152,6 +152,7 @@ class PaymentBurnerAddress(PrimaryUUIDTimeStampedModel):
                                                      null=True, default='not deploy')
     burner_contract_deploy_failure_reason = models.CharField(_('Deploy Fail Reason'), max_length=512, blank=True,
                                                              null=True)
+    qr_code_string = models.CharField(_('QR Code String'), max_length=512, blank=True, null=True)
 
     # transaction_hash = models.CharField(_('Transaction Hash'), max_length=512, blank=True, null=True)
 

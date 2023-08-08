@@ -83,3 +83,23 @@ COINGECKO_EXCHANGE_RATE_1BTC_URL = "https://api.coingecko.com/api/v3/exchange_ra
 COINGECKO_EXCHANGE_RATE_VS_1USD_URL = "https://api.coingecko.com/api/v3/simple/price"
 MAINNET = 'mainnet'
 TESTNET = 'testnet'
+
+PAYMENT_TYPES = ['ecommerce', 'one time payment', 'scan and pay', 'p2p']
+DEVICE_TYPES = ["app", "web", "wap", "others"]
+OS_TYPES = ['android', 'ios', 'windows', 'linux', 'others']
+USDOLLAR = 'usd'
+PAYMENT_TYPES_MAPPING = {
+    'ecommerce': 'merchant ecommerce',
+    'one time payment': 'one time',
+    'scan and pay': 'merchant pos',
+    'p2p': 'p2p',
+    'na': 'na'
+}
+PAYMENT_TYPES_DB_TO_ENUM_MAPPING = {
+    'merchant ecommerce': 'ecommerce',
+    'one time': 'one time payment',
+    'merchant pos': 'scan and pay',
+    'p2p': 'p2p',
+    'na': 'na'
+}
+CHAIN_IDS = ['80001', '81', '137', '592']

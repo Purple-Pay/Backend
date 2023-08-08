@@ -6,7 +6,7 @@ from .views import (
     PaymentList, PaymentFilter,
     PaymentBurnerAddressGetCreateUpdate3, PaymentBurnerAddressVerifyDetail4,
     PaymentBurnerAddressSampleGetCreateUpdate, PaymentBurnerAddressSampleVerifyDetail,
-    ChainConfigGet
+    ChainConfigGet, PaymentConfig
 )
 from django.views.decorators.csrf import csrf_exempt
 
@@ -16,6 +16,7 @@ from .views import ChainConfigGet
 
 urlpatterns = [
     path('chain_config/', ChainConfigGet.as_view(), name='chain_config_get'),
+    path('config/', PaymentConfig.as_view(), name='payment_config_get'),
     path('payment_type/', PaymentTypeListCreate.as_view(), name='payment_type_list_create'),
     path('payment_type/<str:id>', PaymentTypeRetrieveUpdateDelete.as_view(), name='payment_type_get_update_delete'),
     path('currency/', CurrencyListCreate.as_view(), name='currency_list_create'),
