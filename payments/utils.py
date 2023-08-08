@@ -160,6 +160,7 @@ def deploy_and_disburse(burner_address_instance, token_instance,
                                        args=[payment_id, token_address,
                                              amount, merchant_scw_address,
                                              purple_pay_multisig_address])
+        print('arguments', arguments)
 
         # Create a raw transaction to send to the network
         transaction = {
