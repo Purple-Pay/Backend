@@ -95,4 +95,11 @@ PAYMENT_TYPES_MAPPING = {
     'p2p': 'p2p',
     'na': 'na'
 }
+PAYMENT_TYPES_DB_TO_ENUM_MAPPING = {
+    'merchant ecommerce': 'ecommerce',
+    'one time': 'one time payment',
+    'merchant pos': 'scan and pay',
+    'p2p': 'p2p',
+    'na': 'na'
+}
 CHAIN_IDS = ['80001', '81', '137', '592']

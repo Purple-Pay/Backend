@@ -31,7 +31,8 @@ from .resources.constants import (
     PURPLE_PAY_FACTORY_CONTRACT_UNAVAILABLE, CREATE_BURNER_ADDRESS_SUCCESS, CREATE_BURNER_ADDRESS_FAIL,
     PAYMENT_COMPLETED_SUCCESS, BURNER_ADDRESS_UNAVAILABLE_AGAINST_PAYMENT_ID_FAIL, PAYMENT_STATUS_COMPLETED,
     PAYMENT_STATUS_IN_PROGRESS, PAYMENT_ID_MISSING_FAIL, DEPLOY_STATUS_NOT_DEPLOY, DEPLOY_STATUS_FAILURE_DEPLOY,
-    MAINNET, TESTNET, PAYMENT_TYPES, DEVICE_TYPES, OS_TYPES, USDOLLAR, PAYMENT_TYPES_MAPPING, CHAIN_IDS
+    MAINNET, TESTNET, PAYMENT_TYPES, DEVICE_TYPES, OS_TYPES, USDOLLAR, PAYMENT_TYPES_MAPPING, CHAIN_IDS,
+    PAYMENT_TYPES_DB_TO_ENUM_MAPPING
 )
 from gql import gql, Client
 from gql.transport.aiohttp import AIOHTTPTransport
@@ -180,7 +181,8 @@ class PaymentConfig(generics.GenericAPIView):
         """
         response = dict(data=dict(chains_supported=list(), device_metadata=dict()), message="", error="")
         try:
-            chain_qs = BlockchainNetwork.objects.filter(is_active=True).filter(Q(network_type__name=TESTNET) | Q(network_type__name=MAINNET))
+            chain_qs = BlockchainNetwork.objects.filter(is_active=True).filter(
+                Q(network_type__name=TESTNET) | Q(network_type__name=MAINNET))
             for chain_obj in chain_qs:
                 response_obj = dict()
                 response_obj['id'] = int(chain_obj.chain_id)
@@ -233,6 +235,8 @@ class PaymentList(generics.GenericAPIView):
 
             for element in payment_qs_response:
                 payment_data = payment_serializer(element).data
+                payment_data['payment_type'] = PAYMENT_TYPES_DB_TO_ENUM_MAPPING[element.payment_type.name]
+
                 if element.currency is not None:
                     payment_data['symbol'] = element.currency.symbol_primary
                     payment_data['token_address'] = element.currency.token_address_on_network
@@ -257,7 +261,9 @@ class PaymentList(generics.GenericAPIView):
 
             for element in payment_burner_qs_response:
                 # print(element, "::", element.currency.symbol_primary)
+
                 payment_burner_data = payment_burner_serializer(element).data
+                payment_burner_data['payment_type'] = PAYMENT_TYPES_DB_TO_ENUM_MAPPING[element.payment_type.name]
 
                 if element.currency is not None:
                     payment_burner_data['symbol'] = element.currency.symbol_primary
@@ -307,7 +313,7 @@ class PaymentList(generics.GenericAPIView):
                 if response['data'][idx]['chain_id'] in chain_ids_for_env:
                     result.append(response['data'][idx])
 
-            print("response::", response)
+            # print("response::", response)
             response['data'] = result
             response['network_type'] = network_type
             response['message'] = GET_PAYMENT_LIST_SUCCESS
@@ -386,6 +392,7 @@ class PaymentFilter(generics.GenericAPIView):
 
             for element in payment_qs_response:
                 payment_data = payment_serializer(element).data
+                payment_data['payment_type'] = PAYMENT_TYPES_DB_TO_ENUM_MAPPING[element.payment_type.name]
                 # print_statement_with_line('views', 640, 'payment_data', payment_data)
                 payment_data['payment_status'] = PAYMENT_STATUS_COMPLETED
                 if element.currency is not None:
@@ -414,6 +421,7 @@ class PaymentFilter(generics.GenericAPIView):
             for element in payment_burner_qs_response:
                 payment_burner_data = payment_burner_serializer(element).data
                 payment_burner_data['payment_status'] = PAYMENT_STATUS_COMPLETED
+                payment_burner_data['payment_type'] = PAYMENT_TYPES_DB_TO_ENUM_MAPPING[element.payment_type.name]
                 if element.currency is not None:
                     payment_burner_data['symbol'] = element.currency.symbol_primary
                     payment_burner_data['token_address'] = element.currency.token_address_on_network
@@ -600,8 +608,10 @@ class PaymentBurnerAddressGetCreateUpdate3(generics.GenericAPIView):
                 # Generate QR Code String
                 if currency.currency_type.name == 'Native':
                     qr_code_string = f'ethereum:{burner_contract_address}@{currency_chain_id}?value={amount_in_current_currency_as_smallest_unit}'
+                    print(qr_code_string)
                 else:
                     qr_code_string = f'ethereum:{currency_token_address}@{chain_id}/transfer?address={burner_contract_address}&uint256={amount_in_current_currency_as_smallest_unit}'
+                    print(qr_code_string)
 
                 data = {
                     "payment_id": payment_id,
