@@ -225,6 +225,7 @@ class PaymentList(generics.GenericAPIView):
         """Receive API Key and return all payments for the given merchant"""
 
         response = dict(data=[], message="", error="")
+        print("Inside repsonse")
         try:
             user_id = self.request.user.id
 
@@ -235,7 +236,14 @@ class PaymentList(generics.GenericAPIView):
 
             for element in payment_qs_response:
                 payment_data = payment_serializer(element).data
-                payment_data['payment_type'] = PAYMENT_TYPES_DB_TO_ENUM_MAPPING[element.payment_type.name]
+                # print("paymentdata:", payment_data)
+                if element.payment_type:
+                    payment_data['payment_type'] = PAYMENT_TYPES_DB_TO_ENUM_MAPPING[element.payment_type.name]
+                    # print('inside payment type if')
+                    # print(element)
+                else:
+                    payment_data['payment_type'] = PAYMENT_TYPES_DB_TO_ENUM_MAPPING['na']
+                    # print('inside payment type else')
 
                 if element.currency is not None:
                     payment_data['symbol'] = element.currency.symbol_primary
@@ -256,6 +264,8 @@ class PaymentList(generics.GenericAPIView):
                 payment_data.pop('currency')
                 response['data'].append(payment_data)
 
+            # print('response line 267', response)
+
             payment_burner_qs_response = PaymentBurner.objects.filter(user=user_id)
             payment_burner_serializer = self.get_serializer_class('payment_burner')
 
@@ -263,8 +273,11 @@ class PaymentList(generics.GenericAPIView):
                 # print(element, "::", element.currency.symbol_primary)
 
                 payment_burner_data = payment_burner_serializer(element).data
-                payment_burner_data['payment_type'] = PAYMENT_TYPES_DB_TO_ENUM_MAPPING[element.payment_type.name]
-
+                print('payment_burner_data::::', payment_burner_data)
+                if element.payment_type:
+                    payment_burner_data['payment_type'] = PAYMENT_TYPES_DB_TO_ENUM_MAPPING[element.payment_type.name]
+                else:
+                    payment_burner_data['payment_type'] = PAYMENT_TYPES_DB_TO_ENUM_MAPPING['na']
                 if element.currency is not None:
                     payment_burner_data['symbol'] = element.currency.symbol_primary
                     payment_burner_data['token_address'] = element.currency.token_address_on_network
@@ -317,6 +330,7 @@ class PaymentList(generics.GenericAPIView):
             response['data'] = result
             response['network_type'] = network_type
             response['message'] = GET_PAYMENT_LIST_SUCCESS
+            print('line 332', response['message'])
             # print(response)
             # logger.info(response)
             return Response(response, status=status.HTTP_200_OK)
@@ -392,7 +406,10 @@ class PaymentFilter(generics.GenericAPIView):
 
             for element in payment_qs_response:
                 payment_data = payment_serializer(element).data
-                payment_data['payment_type'] = PAYMENT_TYPES_DB_TO_ENUM_MAPPING[element.payment_type.name]
+                if element.payment_type:
+                    payment_data['payment_type'] = PAYMENT_TYPES_DB_TO_ENUM_MAPPING[element.payment_type.name]
+                else:
+                    payment_data['payment_type'] = PAYMENT_TYPES_DB_TO_ENUM_MAPPING['na']
                 # print_statement_with_line('views', 640, 'payment_data', payment_data)
                 payment_data['payment_status'] = PAYMENT_STATUS_COMPLETED
                 if element.currency is not None:
@@ -421,7 +438,10 @@ class PaymentFilter(generics.GenericAPIView):
             for element in payment_burner_qs_response:
                 payment_burner_data = payment_burner_serializer(element).data
                 payment_burner_data['payment_status'] = PAYMENT_STATUS_COMPLETED
-                payment_burner_data['payment_type'] = PAYMENT_TYPES_DB_TO_ENUM_MAPPING[element.payment_type.name]
+                if element.payment_type:
+                    payment_data['payment_type'] = PAYMENT_TYPES_DB_TO_ENUM_MAPPING[element.payment_type.name]
+                else:
+                    payment_data['payment_type'] = PAYMENT_TYPES_DB_TO_ENUM_MAPPING['na']
                 if element.currency is not None:
                     payment_burner_data['symbol'] = element.currency.symbol_primary
                     payment_burner_data['token_address'] = element.currency.token_address_on_network
