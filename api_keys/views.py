@@ -50,11 +50,12 @@ class APIKeyGetCreateUpdate(generics.GenericAPIView):
             data = dict()
             data['user'] = user_id
             data['key_name'] = self.request.data.get('key_name', '')
-            data['secret_key'] = generate_secret_for_api_key()
+            secret_key = generate_secret_for_api_key()
 
             serializer = self.serializer_class(data=data)
 
             if serializer.is_valid():
+                serializer.validated_data['secret_key'] = secret_key
                 serializer.save()
                 data = serializer.data
                 response['data'] = data

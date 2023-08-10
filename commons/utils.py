@@ -16,7 +16,7 @@ def method_permission_classes(classes):
 
 def generate_secret_for_api_key():
     # Specify the desired key length in bytes
-    key_length_bytes = 32      # 256 bits (recommended for higher security)
+    key_length_bytes = 16      # 256 bits (recommended for higher security)
 
     # Generate a random secret key
     secret_key = secrets.token_hex(key_length_bytes)

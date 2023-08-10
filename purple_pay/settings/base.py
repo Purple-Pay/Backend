@@ -25,6 +25,8 @@ AUTH_USER_MODEL = 'authentication.User'
 CSRF_TRUSTED_ORIGINS = ['https://*.purplepay.app']
 CORS_ALLOW_ALL_ORIGINS = True
 
+CORS_ALLOW_HEADERS = ['nonce', 'timestamp', 'signature', 'apiKey']
+
 # Application definition
 
 INSTALLED_APPS = [
