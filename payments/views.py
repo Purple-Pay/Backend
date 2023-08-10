@@ -508,7 +508,7 @@ class PaymentListExternal(generics.GenericAPIView):
             return self.serializers.get('payment_burner')
         return self.default_serializer_class
 
-    def get(self, request, apiKey=None):
+    def get(self, request):
         """Receive API Key and return all payments for the given merchant"""
 
         response = dict(data=dict(payment_list=list(), network_type=""), message="", error="")
@@ -534,6 +534,7 @@ class PaymentListExternal(generics.GenericAPIView):
                 return Response(response, status=status.HTTP_400_BAD_REQUEST)
 
             body = self.request.data
+            # print('body', body)
 
             api_key_in_db = APIKey.objects.filter(id=api_key)
             if len(api_key_in_db) == 0:
@@ -629,7 +630,7 @@ class PaymentListExternal(generics.GenericAPIView):
             payment_status_all_name_set = {element.id: element.name for element in payment_status_all}
             # print(payment_status_all_name_set)
 
-            for idx in range(len(response['data'])):
+            for idx in range(len(response['data']['payment_list'])):
                 response['data']['payment_list'][idx]['payment_status'] = payment_status_all_name_set.get(
                     response['data']['payment_list'][idx].get('payment_status', None), None)
 
