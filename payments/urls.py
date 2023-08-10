@@ -27,8 +27,8 @@ urlpatterns = [
 
     path('list/', PaymentList.as_view(), name='payment_list'),
     path('filter/', PaymentFilter.as_view(), name='payment_filter'),
-    path('all/<str:apiKey>', PaymentListExternal.as_view(), name='payment_list'),
-    path('dateFilter/<str:apiKey>', PaymentFilterExternal.as_view(), name='payment_filter'),
+    path('all/<str:apiKey>', PaymentListExternal.as_view(), name='payment_list_external'),
+    path('dateFilter/<str:apiKey>', PaymentFilterExternal.as_view(), name='payment_filter_external'),
 
     path('burner_address/', csrf_exempt(PaymentBurnerAddressGetCreateUpdate3.as_view()),
          name='burner_payment_get_create_update'),
