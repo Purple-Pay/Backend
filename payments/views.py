@@ -83,7 +83,7 @@ class PaymentStatusRetrieveUpdateDelete(generics.RetrieveUpdateDestroyAPIView):
 
 
 def get_chain_ids_by_env():
-    deployed_env = os.environ.get('BUILD_ENV', 'dev')
+    deployed_env = 'sit'  #os.environ.get('BUILD_ENV', 'dev')
     testnet_qs = BlockchainNetwork.objects.filter(network_type__name=TESTNET)
     chain_ids = [element.chain_id for element in testnet_qs]
     if deployed_env == 'sit':
@@ -509,7 +509,7 @@ class PaymentListExternal(generics.GenericAPIView):
     def get(self, request, apiKey=None):
         """Receive API Key and return all payments for the given merchant"""
 
-        response = dict(data=list(), message="", error="")
+        response = dict(data=dict(payment_list=list(), network_type=""), message="", error="")
         try:
             api_key = apiKey
 
@@ -554,7 +554,7 @@ class PaymentListExternal(generics.GenericAPIView):
                 # payment_data.pop('created_at')
                 # payment_data.pop('modified_at')
                 payment_data.pop('currency')
-                response['data'].append(payment_data)
+                response['data']['payment_list'].append(payment_data)
 
             # print('response line 267', response)
 
@@ -587,7 +587,7 @@ class PaymentListExternal(generics.GenericAPIView):
                 # payment_burner_data.pop('created_at')
                 # payment_burner_data.pop('modified_at')
                 payment_burner_data.pop('currency')
-                response['data'].append(payment_burner_data)
+                response['data']['payment_list'].append(payment_burner_data)
 
             # Adding payment_status as string
             payment_status_all = PaymentStatus.objects.all()
@@ -597,30 +597,29 @@ class PaymentListExternal(generics.GenericAPIView):
             # print(payment_status_all_name_set)
 
             for idx in range(len(response['data'])):
-                response['data'][idx]['payment_status'] = payment_status_all_name_set.get(
-                    response['data'][idx].get('payment_status', None), None)
+                response['data']['payment_list'][idx]['payment_status'] = payment_status_all_name_set.get(
+                    response['data']['payment_list'][idx].get('payment_status', None), None)
 
             blockchain_network_all = BlockchainNetwork.objects.all()
             blockchain_network_all_name_set = {element.id: element.chain_id for element in blockchain_network_all}
             # print("lines 173", blockchain_network_all_name_set)
 
-            for idx in range(len(response['data'])):
-                response['data'][idx]['chain_id'] = blockchain_network_all_name_set.get(
-                    response['data'][idx].get('blockchain_network', None), None)
-                if "blockchain_network" in response['data'][idx]:
-                    response['data'][idx].pop('blockchain_network')
+            for idx in range(len(response['data']['payment_list'])):
+                response['data']['payment_list'][idx]['chain_id'] = blockchain_network_all_name_set.get(
+                    response['data']['payment_list'][idx].get('blockchain_network', None), None)
+                if "blockchain_network" in response['data']['payment_list'][idx]:
+                    response['data']['payment_list'][idx].pop('blockchain_network')
                 # print("line 178", response['data'][idx])
 
             chain_ids_for_env, network_type = get_chain_ids_by_env()
             result = []
-            for idx in range(len(response['data'])):
-                print('inside for:', response['data'][idx]['chain_id'], "::::", chain_ids_for_env)
-                if response['data'][idx]['chain_id'] in chain_ids_for_env:
-                    result.append(response['data'][idx])
+            for idx in range(len(response['data']['payment_list'])):
+                if response['data']['payment_list'][idx]['chain_id'] in chain_ids_for_env:
+                    result.append(response['data']['payment_list'][idx])
 
             # print("response::", response)
-            response['data'] = result
-            response['network_type'] = network_type
+            response['data']["payment_list"] = result
+            response['data']['network_type'] = network_type
             response['message'] = GET_PAYMENT_LIST_SUCCESS
             # print(response)
             # logger.info(response)
@@ -665,7 +664,7 @@ class PaymentFilterExternal(generics.GenericAPIView):
         return date_obj_complete
 
     def get(self, request, apiKey=None):
-        response = dict(data=[], message="", error="")
+        response = dict(data=dict(payment_list=list(), network_type=""), message="", error="")
         try:
             api_key = apiKey
 
@@ -687,7 +686,6 @@ class PaymentFilterExternal(generics.GenericAPIView):
 
             # Case 2: Between start_date and end_date
             if not start_date_str or not end_date_str:
-                response['data'] = []
                 response['message'] = DATE_FILTER_MISSING_FAIL
                 return Response(response, status=status.HTTP_200_OK)
 
@@ -729,7 +727,7 @@ class PaymentFilterExternal(generics.GenericAPIView):
                 # payment_data.pop('created_at')
                 # payment_data.pop('modified_at')
                 payment_data.pop('currency')
-                response['data'].append(payment_data)
+                response['data']['payment_list'].append(payment_data)
                 # print_statement_with_line('views', 652, 'payment_data', payment_data)
                 # print_statement_with_line('views', 652, 'response_data', response['data'])
 
@@ -760,28 +758,28 @@ class PaymentFilterExternal(generics.GenericAPIView):
                 # payment_burner_data.pop('created_at')
                 # payment_burner_data.pop('modified_at')
                 payment_burner_data.pop('currency')
-                response['data'].append(payment_burner_data)
+                response['data']['payment_list'].append(payment_burner_data)
 
             blockchain_network_all = BlockchainNetwork.objects.all()
             blockchain_network_all_name_set = {element.id: element.chain_id for element in blockchain_network_all}
             # print("lines 173", blockchain_network_all_name_set)
 
-            for idx in range(len(response['data'])):
-                response['data'][idx]['chain_id'] = blockchain_network_all_name_set.get(
-                    response['data'][idx].get('blockchain_network', None), None)
-                if "blockchain_network" in response['data'][idx]:
-                    response['data'][idx].pop('blockchain_network')
+            for idx in range(len(response['data']['payment_list'])):
+                response['data']['payment_list'][idx]['chain_id'] = blockchain_network_all_name_set.get(
+                    response['data']['payment_list'][idx].get('blockchain_network', None), None)
+                if "blockchain_network" in response['data']['payment_list'][idx]:
+                    response['data']['payment_list'][idx].pop('blockchain_network')
                 # print("line 178", response['data'][idx])
 
             chain_ids_for_env, network_type = get_chain_ids_by_env()
 
             result = []
-            for idx in range(len(response['data'])):
-                if response['data'][idx]['chain_id'] in chain_ids_for_env:
-                    result.append(response['data'][idx])
+            for idx in range(len(response['data']['payment_list'])):
+                if response['data']['payment_list'][idx]['chain_id'] in chain_ids_for_env:
+                    result.append(response['data']['payment_list'][idx])
 
-            response['data'] = result
-            response['network_type'] = network_type
+            response['data']["payment_list"] = result
+            response['data']['network_type'] = network_type
             response['message'] = GET_PAYMENT_LIST_SUCCESS
 
             return Response(response, status=status.HTTP_200_OK)
