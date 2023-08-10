@@ -6,7 +6,7 @@ from .views import (
     PaymentList, PaymentFilter,
     PaymentBurnerAddressGetCreateUpdate3, PaymentBurnerAddressVerifyDetail4,
     PaymentBurnerAddressSampleGetCreateUpdate, PaymentBurnerAddressSampleVerifyDetail,
-    ChainConfigGet, PaymentConfig
+    ChainConfigGet, PaymentConfig, PaymentListExternal, PaymentFilterExternal
 )
 from django.views.decorators.csrf import csrf_exempt
 
@@ -27,6 +27,8 @@ urlpatterns = [
 
     path('list/', PaymentList.as_view(), name='payment_list'),
     path('filter/', PaymentFilter.as_view(), name='payment_filter'),
+    path('all/<str:apiKey>', PaymentListExternal.as_view(), name='payment_list'),
+    path('dateFilter/<str:apiKey>', PaymentFilterExternal.as_view(), name='payment_filter'),
 
     path('burner_address/', csrf_exempt(PaymentBurnerAddressGetCreateUpdate3.as_view()),
          name='burner_payment_get_create_update'),

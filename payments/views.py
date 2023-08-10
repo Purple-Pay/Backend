@@ -161,7 +161,7 @@ class ChainConfigGet(generics.GenericAPIView):
 class PaymentConfig(generics.GenericAPIView):
     permission_classes = [AllowAny]
 
-    def get(self):
+    def get(self, request):
         """
         :return: {
         chains_supported: {
@@ -207,7 +207,7 @@ class PaymentConfig(generics.GenericAPIView):
 
 
 class PaymentList(generics.GenericAPIView):
-    permission_classes = [IsAuthenticated | IsAdminUser, ]
+    permission_classes = [IsAuthenticated | IsAdminUser,]
     serializers = {
         'payment_burner': PaymentBurnerSerializer,
         'payment': PaymentSerializer,
@@ -439,9 +439,9 @@ class PaymentFilter(generics.GenericAPIView):
                 payment_burner_data = payment_burner_serializer(element).data
                 payment_burner_data['payment_status'] = PAYMENT_STATUS_COMPLETED
                 if element.payment_type:
-                    payment_data['payment_type'] = PAYMENT_TYPES_DB_TO_ENUM_MAPPING[element.payment_type.name]
+                    payment_burner_data['payment_type'] = PAYMENT_TYPES_DB_TO_ENUM_MAPPING[element.payment_type.name]
                 else:
-                    payment_data['payment_type'] = PAYMENT_TYPES_DB_TO_ENUM_MAPPING['na']
+                    payment_burner_data['payment_type'] = PAYMENT_TYPES_DB_TO_ENUM_MAPPING['na']
                 if element.currency is not None:
                     payment_burner_data['symbol'] = element.currency.symbol_primary
                     payment_burner_data['token_address'] = element.currency.token_address_on_network
@@ -461,6 +461,328 @@ class PaymentFilter(generics.GenericAPIView):
                 # payment_burner_data.pop('modified_at')
                 payment_burner_data.pop('currency')
                 response['data'].append(payment_burner_data)
+
+            blockchain_network_all = BlockchainNetwork.objects.all()
+            blockchain_network_all_name_set = {element.id: element.chain_id for element in blockchain_network_all}
+            # print("lines 173", blockchain_network_all_name_set)
+
+            for idx in range(len(response['data'])):
+                response['data'][idx]['chain_id'] = blockchain_network_all_name_set.get(
+                    response['data'][idx].get('blockchain_network', None), None)
+                if "blockchain_network" in response['data'][idx]:
+                    response['data'][idx].pop('blockchain_network')
+                # print("line 178", response['data'][idx])
+
+            chain_ids_for_env, network_type = get_chain_ids_by_env()
+            result = []
+            for idx in range(len(response['data'])):
+                if response['data'][idx]['chain_id'] in chain_ids_for_env:
+                    result.append(response['data'][idx])
+
+            response['data'] = result
+            response['network_type'] = network_type
+            response['message'] = GET_PAYMENT_LIST_SUCCESS
+
+            return Response(response, status=status.HTTP_200_OK)
+        except Exception as e:
+            response['message'] = EXCEPTION_OCCURRED
+            response['error'] = str(e)
+            # logger.info(response)
+            return Response(response, status=status.HTTP_400_BAD_REQUEST)
+
+
+class PaymentListExternal(generics.GenericAPIView):
+    permission_classes = [AllowAny]
+    serializers = {
+        'payment_burner': PaymentBurnerSerializer,
+        'payment': PaymentSerializer,
+    }
+    default_serializer_class = PaymentBurnerSerializer
+
+    def get_serializer_class(self, serializer_type):
+        if serializer_type == 'payment':
+            return self.serializers.get('payment')
+        if serializer_type == 'payment_burner':
+            return self.serializers.get('payment_burner')
+        return self.default_serializer_class
+
+    def get(self, request, apiKey=None):
+        """Receive API Key and return all payments for the given merchant"""
+
+        response = dict(data=list(), message="", error="")
+        try:
+            api_key = apiKey
+
+            # Validate api_key and user_id
+            api_key_in_db = APIKey.objects.filter(id=api_key)
+            # print(f"api_key_in_db: ${api_key_in_db}")
+            if len(api_key_in_db) == 0:
+                return Response("No such API Key found!", status=status.HTTP_200_OK)
+
+            user_id = api_key_in_db[0].user.id
+
+            payment_qs_response = Payment.objects.filter(user=user_id)
+            # print_statement_with_line('views', 535, 'payment_qs_response', payment_qs_response)
+            payment_serializer = self.get_serializer_class('payment')
+            # print_statement_with_line('views', 538, 'payment_qs_response', payment_qs_response)
+
+            for element in payment_qs_response:
+                payment_data = payment_serializer(element).data
+                # print("paymentdata:", payment_data)
+                if element.payment_type:
+                    payment_data['payment_type'] = PAYMENT_TYPES_DB_TO_ENUM_MAPPING[element.payment_type.name]
+                    # print('inside payment type if')
+                    # print(element)
+                else:
+                    payment_data['payment_type'] = PAYMENT_TYPES_DB_TO_ENUM_MAPPING['na']
+                    # print('inside payment type else')
+
+                if element.currency is not None:
+                    payment_data['symbol'] = element.currency.symbol_primary
+                    payment_data['token_address'] = element.currency.token_address_on_network
+                    # payment_data['chain_id'] = element.currency.blockchain_network.chain_id
+                    # payment_data['chain_name'] = element.currency.blockchain_network.name
+                    payment_data['decimals'] = element.currency.decimals
+                    payment_data['image_url'] = element.currency.asset_url
+                else:
+                    payment_data['symbol'] = None
+                    payment_data['token_address'] = None
+                    # payment_data['chain_id'] = None
+                    # payment_data['chain_name'] = None
+                    payment_data['decimals'] = None
+                    payment_data['image_url'] = None
+                # payment_data.pop('created_at')
+                # payment_data.pop('modified_at')
+                payment_data.pop('currency')
+                response['data'].append(payment_data)
+
+            # print('response line 267', response)
+
+            payment_burner_qs_response = PaymentBurner.objects.filter(user=user_id)
+            payment_burner_serializer = self.get_serializer_class('payment_burner')
+
+            for element in payment_burner_qs_response:
+                # print(element, "::", element.currency.symbol_primary)
+
+                payment_burner_data = payment_burner_serializer(element).data
+                if element.payment_type:
+                    payment_burner_data['payment_type'] = PAYMENT_TYPES_DB_TO_ENUM_MAPPING[element.payment_type.name]
+                else:
+                    payment_burner_data['payment_type'] = PAYMENT_TYPES_DB_TO_ENUM_MAPPING['na']
+                if element.currency is not None:
+                    payment_burner_data['symbol'] = element.currency.symbol_primary
+                    payment_burner_data['token_address'] = element.currency.token_address_on_network
+                    # payment_burner_data['chain_id'] = element.currency.blockchain_network.chain_id
+                    # payment_burner_data['chain_name'] = element.currency.blockchain_network.name
+                    payment_burner_data['decimals'] = element.currency.decimals
+                    payment_burner_data['image_url'] = element.currency.asset_url
+                else:
+                    payment_burner_data['symbol'] = None
+                    payment_burner_data['token_address'] = None
+                    # payment_burner_data['chain_id'] = None
+                    # payment_burner_data['chain_name'] = None
+                    payment_burner_data['decimals'] = None
+                    payment_burner_data['image_url'] = None
+
+                # payment_burner_data.pop('created_at')
+                # payment_burner_data.pop('modified_at')
+                payment_burner_data.pop('currency')
+                response['data'].append(payment_burner_data)
+
+            # Adding payment_status as string
+            payment_status_all = PaymentStatus.objects.all()
+            # print(payment_status_all)
+
+            payment_status_all_name_set = {element.id: element.name for element in payment_status_all}
+            # print(payment_status_all_name_set)
+
+            for idx in range(len(response['data'])):
+                response['data'][idx]['payment_status'] = payment_status_all_name_set.get(
+                    response['data'][idx].get('payment_status', None), None)
+
+            blockchain_network_all = BlockchainNetwork.objects.all()
+            blockchain_network_all_name_set = {element.id: element.chain_id for element in blockchain_network_all}
+            # print("lines 173", blockchain_network_all_name_set)
+
+            for idx in range(len(response['data'])):
+                response['data'][idx]['chain_id'] = blockchain_network_all_name_set.get(
+                    response['data'][idx].get('blockchain_network', None), None)
+                if "blockchain_network" in response['data'][idx]:
+                    response['data'][idx].pop('blockchain_network')
+                # print("line 178", response['data'][idx])
+
+            chain_ids_for_env, network_type = get_chain_ids_by_env()
+            result = []
+            for idx in range(len(response['data'])):
+                print('inside for:', response['data'][idx]['chain_id'], "::::", chain_ids_for_env)
+                if response['data'][idx]['chain_id'] in chain_ids_for_env:
+                    result.append(response['data'][idx])
+
+            # print("response::", response)
+            response['data'] = result
+            response['network_type'] = network_type
+            response['message'] = GET_PAYMENT_LIST_SUCCESS
+            # print(response)
+            # logger.info(response)
+            return Response(response, status=status.HTTP_200_OK)
+        except Exception as e:
+            response['data'] = []
+            response['message'] = EXCEPTION_OCCURRED
+            response['error'] = str(e)
+            # logger.info(response)
+            return Response(response, status=status.HTTP_400_BAD_REQUEST)
+
+
+class PaymentFilterExternal(generics.GenericAPIView):
+    permission_classes = [AllowAny]
+    serializers = {
+        'payment_burner': PaymentBurnerSerializer,
+        'payment': PaymentSerializer,
+    }
+    default_serializer_class = PaymentBurnerSerializer
+
+    def get_serializer_class(self, serializer_type):
+        if serializer_type == 'payment':
+            return self.serializers.get('payment')
+        if serializer_type == 'payment_burner':
+            return self.serializers.get('payment_burner')
+        return self.default_serializer_class
+
+    def process_str_to_date_obj(self, date_str, date_suffix, date_format):
+        """
+        Receive API Key and return all payments for the given merchant
+        https://docs.python.org/3/library/datetime.html#strftime-strptime-behavior
+        """
+
+        date_str_split = date_str.split('-')
+        day_str = date_str_split[0]
+        month_str = date_str_split[1]
+        year_str = date_str_split[-1]
+        date_str_complete = f'{year_str}-{month_str}-{day_str} {date_suffix}'
+        # print(date_str_complete)
+        date_obj_complete = datetime.datetime.strptime(date_str_complete, date_format)
+        # print(date_obj_complete)
+        return date_obj_complete
+
+    def get(self, request, apiKey=None):
+        response = dict(data=[], message="", error="")
+        try:
+            api_key = apiKey
+
+            # Validate api_key and user_id
+            api_key_in_db = APIKey.objects.filter(id=api_key)
+            # print(f"api_key_in_db: ${api_key_in_db}")
+            if len(api_key_in_db) == 0:
+                return Response("No such API Key found!", status=status.HTTP_200_OK)
+
+            user_id = api_key_in_db[0].user.id
+            start_date_str = request.query_params.get('start_date', '')  # Assuming senttime is 'DD-MM-YYYY'
+            end_date_str = request.query_params.get('end_date', '')
+            DATE_SUFFIX = '00:00:00.000000 +0000'
+            DATE_FORMAT = '%Y-%m-%d %H:%M:%S.%f %z'
+
+            # Case 1: Since start_date till today
+            # Case 2: Between start_date and end_date
+            # Case 3: Before start_Date
+
+            # Case 2: Between start_date and end_date
+            if not start_date_str or not end_date_str:
+                response['data'] = []
+                response['message'] = DATE_FILTER_MISSING_FAIL
+                return Response(response, status=status.HTTP_200_OK)
+
+            start_date_obj = self.process_str_to_date_obj(start_date_str, DATE_SUFFIX, DATE_FORMAT)
+            end_date_obj = self.process_str_to_date_obj(end_date_str, DATE_SUFFIX, DATE_FORMAT)
+
+            user_query = Q(user=user_id)
+            # Get id for payment_status = completed
+            payment_status_obj = PaymentStatus.objects.get(name=PAYMENT_STATUS_COMPLETED)
+            payment_status_query = Q(payment_status=payment_status_obj.id)
+            date_query = Q(created_at__range=[start_date_obj, end_date_obj])
+
+            payment_qs_response = Payment.objects.filter(user_query & payment_status_query & date_query)
+            # print_statement_with_line('views', 636, 'payment_qs_response', payment_qs_response)
+            payment_serializer = self.get_serializer_class('payment')
+
+            for element in payment_qs_response:
+                payment_data = payment_serializer(element).data
+                if element.payment_type:
+                    payment_data['payment_type'] = PAYMENT_TYPES_DB_TO_ENUM_MAPPING[element.payment_type.name]
+                else:
+                    payment_data['payment_type'] = PAYMENT_TYPES_DB_TO_ENUM_MAPPING['na']
+                # print_statement_with_line('views', 640, 'payment_data', payment_data)
+                payment_data['payment_status'] = PAYMENT_STATUS_COMPLETED
+                if element.currency is not None:
+                    payment_data['symbol'] = element.currency.symbol_primary
+                    payment_data['token_address'] = element.currency.token_address_on_network
+                    payment_data['chain_id'] = element.currency.blockchain_network.chain_id
+                    payment_data['chain_name'] = element.currency.blockchain_network.name
+                    payment_data['decimals'] = element.currency.decimals
+                    payment_data['image_url'] = element.currency.asset_url
+                else:
+                    payment_data['symbol'] = None
+                    payment_data['token_address'] = None
+                    payment_data['chain_id'] = None
+                    payment_data['chain_name'] = None
+                    payment_data['decimals'] = None
+                    payment_data['image_url'] = None
+                # payment_data.pop('created_at')
+                # payment_data.pop('modified_at')
+                payment_data.pop('currency')
+                response['data'].append(payment_data)
+                # print_statement_with_line('views', 652, 'payment_data', payment_data)
+                # print_statement_with_line('views', 652, 'response_data', response['data'])
+
+            payment_burner_qs_response = PaymentBurner.objects.filter(user_query & payment_status_query & date_query)
+            payment_burner_serializer = self.get_serializer_class('payment_burner')
+            for element in payment_burner_qs_response:
+                payment_burner_data = payment_burner_serializer(element).data
+                payment_burner_data['payment_status'] = PAYMENT_STATUS_COMPLETED
+                if element.payment_type:
+                    payment_burner_data['payment_type'] = PAYMENT_TYPES_DB_TO_ENUM_MAPPING[element.payment_type.name]
+                else:
+                    payment_burner_data['payment_type'] = PAYMENT_TYPES_DB_TO_ENUM_MAPPING['na']
+                if element.currency is not None:
+                    payment_burner_data['symbol'] = element.currency.symbol_primary
+                    payment_burner_data['token_address'] = element.currency.token_address_on_network
+                    payment_burner_data['chain_id'] = element.currency.blockchain_network.chain_id
+                    payment_burner_data['chain_name'] = element.currency.blockchain_network.name
+                    payment_burner_data['decimals'] = element.currency.decimals
+                    payment_burner_data['image_url'] = element.currency.asset_url
+                else:
+                    payment_burner_data['symbol'] = None
+                    payment_burner_data['token_address'] = None
+                    payment_burner_data['chain_id'] = None
+                    payment_burner_data['chain_name'] = None
+                    payment_burner_data['decimals'] = None
+                    payment_burner_data['image_url'] = None
+
+                # payment_burner_data.pop('created_at')
+                # payment_burner_data.pop('modified_at')
+                payment_burner_data.pop('currency')
+                response['data'].append(payment_burner_data)
+
+            blockchain_network_all = BlockchainNetwork.objects.all()
+            blockchain_network_all_name_set = {element.id: element.chain_id for element in blockchain_network_all}
+            # print("lines 173", blockchain_network_all_name_set)
+
+            for idx in range(len(response['data'])):
+                response['data'][idx]['chain_id'] = blockchain_network_all_name_set.get(
+                    response['data'][idx].get('blockchain_network', None), None)
+                if "blockchain_network" in response['data'][idx]:
+                    response['data'][idx].pop('blockchain_network')
+                # print("line 178", response['data'][idx])
+
+            chain_ids_for_env, network_type = get_chain_ids_by_env()
+
+            result = []
+            for idx in range(len(response['data'])):
+                if response['data'][idx]['chain_id'] in chain_ids_for_env:
+                    result.append(response['data'][idx])
+
+            response['data'] = result
+            response['network_type'] = network_type
+            response['message'] = GET_PAYMENT_LIST_SUCCESS
 
             return Response(response, status=status.HTTP_200_OK)
         except Exception as e:
