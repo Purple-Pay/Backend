@@ -22,6 +22,7 @@ from django.utils import timezone
 import base64
 from .apps import logger
 import os
+from commons.utils import generate_signature, verify_signature
 from .resources.constants import (
     GET_PAYMENT_STATUS_SUCCESS, USER_ID_API_KEY_MISMATCH,
     CREATE_PAYMENT_SUCCESS, CREATE_PAYMENT_FAIL, EXCEPTION_OCCURRED,
@@ -83,7 +84,7 @@ class PaymentStatusRetrieveUpdateDelete(generics.RetrieveUpdateDestroyAPIView):
 
 
 def get_chain_ids_by_env():
-    deployed_env = 'sit'  #os.environ.get('BUILD_ENV', 'dev')
+    deployed_env = os.environ.get('BUILD_ENV', 'dev')
     testnet_qs = BlockchainNetwork.objects.filter(network_type__name=TESTNET)
     chain_ids = [element.chain_id for element in testnet_qs]
     if deployed_env == 'sit':
@@ -104,6 +105,7 @@ class ChainConfigGet(generics.GenericAPIView):
         """Return all chain details for the given environment"""
         response = dict(data=dict(chain_details=[]), message="", error="")
         try:
+
             deployed_env = os.environ.get('BUILD_ENV', 'dev')
             if deployed_env == 'dev':
                 chain_qs = BlockchainNetwork.objects.filter(network_type__name=TESTNET).filter(is_active=True)
@@ -510,14 +512,45 @@ class PaymentListExternal(generics.GenericAPIView):
         """Receive API Key and return all payments for the given merchant"""
 
         response = dict(data=dict(payment_list=list(), network_type=""), message="", error="")
-        try:
-            api_key = apiKey
 
+        try:
             # Validate api_key and user_id
+            timestamp = self.request.META.get('HTTP_TIMESTAMP', None)
+            nonce = self.request.META.get('HTTP_NONCE', None)
+            received_signature = self.request.META.get('HTTP_SIGNATURE', None)
+            api_key = self.request.META.get('HTTP_APIKEY', None)
+
+            if timestamp is None:
+                response['error'] = 'Timestamp is missing in request header!'
+                return Response(response, status=status.HTTP_400_BAD_REQUEST)
+            if nonce is None:
+                response['error'] = 'Nonce is missing in request header!'
+                return Response(response, status=status.HTTP_400_BAD_REQUEST)
+            if received_signature is None:
+                response['error'] = 'Signature is missing'
+                return Response(response, status=status.HTTP_400_BAD_REQUEST)
+            if api_key is None:
+                response['error'] = 'API Key is missing'
+                return Response(response, status=status.HTTP_400_BAD_REQUEST)
+
+            body = self.request.data
+
             api_key_in_db = APIKey.objects.filter(id=api_key)
-            # print(f"api_key_in_db: ${api_key_in_db}")
             if len(api_key_in_db) == 0:
-                return Response("No such API Key found!", status=status.HTTP_200_OK)
+                return Response("Invalid request", status=status.HTTP_400_BAD_REQUEST)
+            if api_key_in_db[0].secret_key is None:
+                return Response("Invalid request", status=status.HTTP_400_BAD_REQUEST)
+
+            # Validate Signature
+            payload = f"{timestamp}\n{nonce}\n{body}\n"
+            secret_key = api_key_in_db[0].secret_key
+
+            # Verify the signature
+            is_signature_valid = verify_signature(payload, secret_key, received_signature)
+            print("Signature is valid:", is_signature_valid)
+            if not is_signature_valid:
+                response['error'] = 'Unable to authenticate!'
+                return Response(response, status=status.HTTP_400_BAD_REQUEST)
 
             user_id = api_key_in_db[0].user.id
 
@@ -652,7 +685,6 @@ class PaymentFilterExternal(generics.GenericAPIView):
         Receive API Key and return all payments for the given merchant
         https://docs.python.org/3/library/datetime.html#strftime-strptime-behavior
         """
-
         date_str_split = date_str.split('-')
         day_str = date_str_split[0]
         month_str = date_str_split[1]
@@ -663,16 +695,46 @@ class PaymentFilterExternal(generics.GenericAPIView):
         # print(date_obj_complete)
         return date_obj_complete
 
-    def get(self, request, apiKey=None):
+    def get(self, request):
         response = dict(data=dict(payment_list=list(), network_type=""), message="", error="")
         try:
-            api_key = apiKey
-
             # Validate api_key and user_id
+            timestamp = self.request.META.get('HTTP_TIMESTAMP', None)
+            nonce = self.request.META.get('HTTP_NONCE', None)
+            received_signature = self.request.META.get('HTTP_SIGNATURE', None)
+            api_key = self.request.META.get('HTTP_APIKEY', None)
+
+            if timestamp is None:
+                response['error'] = 'Timestamp is missing in request header!'
+                return Response(response, status=status.HTTP_400_BAD_REQUEST)
+            if nonce is None:
+                response['error'] = 'Nonce is missing in request header!'
+                return Response(response, status=status.HTTP_400_BAD_REQUEST)
+            if received_signature is None:
+                response['error'] = 'Signature is missing'
+                return Response(response, status=status.HTTP_400_BAD_REQUEST)
+            if api_key is None:
+                response['error'] = 'API Key is missing'
+                return Response(response, status=status.HTTP_400_BAD_REQUEST)
+
+            body = self.request.data
+
             api_key_in_db = APIKey.objects.filter(id=api_key)
-            # print(f"api_key_in_db: ${api_key_in_db}")
             if len(api_key_in_db) == 0:
-                return Response("No such API Key found!", status=status.HTTP_200_OK)
+                return Response("Invalid request", status=status.HTTP_400_BAD_REQUEST)
+            if api_key_in_db[0].secret_key is None:
+                return Response("Invalid request", status=status.HTTP_400_BAD_REQUEST)
+
+            # Validate Signature
+            payload = f"{timestamp}\n{nonce}\n{body}\n"
+            secret_key = api_key_in_db[0].secret_key
+
+            # Verify the signature
+            is_signature_valid = verify_signature(payload, secret_key, received_signature)
+            print("Signature is valid:", is_signature_valid)
+            if not is_signature_valid:
+                response['error'] = 'Unable to authenticate!'
+                return Response(response, status=status.HTTP_400_BAD_REQUEST)
 
             user_id = api_key_in_db[0].user.id
             start_date_str = request.query_params.get('start_date', '')  # Assuming senttime is 'DD-MM-YYYY'

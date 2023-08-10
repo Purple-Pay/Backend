@@ -12,6 +12,7 @@ from api_keys.resources.constants import (
     DELETE_API_KEY_FAIL, API_KEY_INVALID, USER_PROFILE_SUCCESS_FOUND,
     USER_PROFILE_FAIL_NOT_FOUND
 )
+from commons.utils import generate_secret_for_api_key
 
 
 class APIKeyGetCreateUpdate(generics.GenericAPIView):
@@ -49,6 +50,8 @@ class APIKeyGetCreateUpdate(generics.GenericAPIView):
             data = dict()
             data['user'] = user_id
             data['key_name'] = self.request.data.get('key_name', '')
+            data['secret_key'] = generate_secret_for_api_key()
+
             serializer = self.serializer_class(data=data)
 
             if serializer.is_valid():

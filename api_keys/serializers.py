@@ -6,6 +6,7 @@ from authentication.models import User
 class APIKeySerializer(serializers.ModelSerializer):
     id = serializers.UUIDField(read_only=True)
     user = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
+    secret_key = serializers.CharField(read_only=True)
 
     class Meta:
         model = APIKey
