@@ -3,6 +3,7 @@ from commons.models import PrimaryUUIDTimeStampedModel
 from authentication.models import User
 from django.utils.translation import gettext_lazy as _
 from payments.models import BlockchainNetwork, Currency
+from django.contrib.postgres.fields import ArrayField
 
 
 # Create your models here.
@@ -46,4 +47,33 @@ class UserSmartContractWalletAddress(PrimaryUUIDTimeStampedModel):
 
     def __str__(self):
         return f"Id::{str(self.id)}::::UserId::{str(self.user)}"
+
+
+class Webhook(PrimaryUUIDTimeStampedModel):
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, related_name="webhooks", null=True, blank=True)
+    url = models.CharField(_('webhook'), max_length=512, blank=True, null=True)
+    status = models.CharField(_('webhook status'), max_length=50, blank=True, null=True)    # ACTIVE, INACTIVE
+    secret_key = models.CharField(_('secret key'), max_length=1024, blank=True, null=True)
+    event_type = models.CharField(_('events of interest'), max_length=128, blank=True, null=True)    # 'PAYMENT_SUCCESS', 'REFUND', 'CHARGEBACK"
+    retry_count = models.IntegerField(default=2)
+    payload_format = models.JSONField(blank=True, null=True)
+    delivery_response_format = models.JSONField(blank=True, null=True)
+    version = models.CharField(_('version'), max_length=32, blank=True, null=True)
+    description = models.TextField(blank=True, null=True)
+    metadata = models.JSONField(blank=True, null=True)    # IP Whitelisting
+
+
+class WebhookActivity(PrimaryUUIDTimeStampedModel):
+    webhook_id = models.ForeignKey(Webhook, on_delete=models.SET_NULL, blank=True, null=True, related_name="webhookactivity")
+    latest_interaction = models.DateTimeField(auto_now=True)
+    latest_interaction_type = models.CharField(_('latest interaction type'), max_length=64, blank=True, null=True)    # 'SUCCESS', 'FAIL'
+    delivery_response_body = models.CharField(_('webhook delivery response'), max_length=1024, blank=True, null=True)
+    delivery_response_status_code = models.CharField(_('webhook delivery response status'), max_length=64, blank=True, null=True)
+    error_log = models.TextField(blank=True, null=True)
+
+
+
+
+
+
 
