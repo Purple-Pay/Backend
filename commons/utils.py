@@ -25,6 +25,17 @@ def generate_secret_for_api_key():
     return secret_key
 
 
+def generate_secret_for_webhook():
+    # Specify the desired key length in bytes
+    key_length_bytes = 16      # 256 bits (recommended for higher security)
+
+    # Generate a random secret key
+    secret_key = secrets.token_hex(key_length_bytes)
+
+    print("Generated Secret Key:", secret_key)
+    return secret_key
+
+
 def generate_signature(payload, secret_key):
     return hmac.new(
         bytes(secret_key, "utf-8"),

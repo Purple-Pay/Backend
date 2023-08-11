@@ -1,7 +1,7 @@
 from typing import Any, List
 from rest_framework import generics, status, request
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated, AllowAny, IsAdminUser
+from rest_framework.permissions import IsAuthenticated, AllowAny, IsAdminUser, IsAuthenticatedOrReadOnly
 from authentication.models import User
 from api_keys.models import APIKey
 from user_profile.models import UserProfile
@@ -99,7 +99,7 @@ def get_chain_ids_by_env():
 
 
 class ChainConfigGet(generics.GenericAPIView):
-    permission_classes = [AllowAny, ]
+    permission_classes = [IsAuthenticatedOrReadOnly, ]
 
     def get(self, request):
         """Return all chain details for the given environment"""
@@ -161,7 +161,7 @@ class ChainConfigGet(generics.GenericAPIView):
 
 
 class PaymentConfig(generics.GenericAPIView):
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticatedOrReadOnly]
 
     def get(self, request):
         """
