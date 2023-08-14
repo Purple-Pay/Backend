@@ -993,7 +993,7 @@ class UserSmartContractWalletAddressGetCreateUpdateDelete(generics.GenericAPIVie
                     "error": ""
                 }
         """
-        response = dict(data=list(), message="", status="", code="", error="")
+        response = dict(data=dict(), message="", status="", code="", error="")
         try:
             user_id = self.request.user.id
             queryset = UserSmartContractWalletAddress.objects.filter(user=user_id)
@@ -1016,10 +1016,10 @@ class UserSmartContractWalletAddressGetCreateUpdateDelete(generics.GenericAPIVie
                     blockchain_network_qs = BlockchainNetwork.objects.filter(id=blockchain_network)
                     if blockchain_network_qs:
                         chain_id = int(blockchain_network_qs[0].chain_id)
-                data['chainId'] = chain_id
+                data['chain_id'] = chain_id
                 response_data.append(data)
 
-            response['data'] = response_data
+            response['data'] = response_data[0]
             response['message'] = "Wallet Addresses successfully fetched for the user"
             response['status'] = SUCCESS
             response['code'] = API_REQUEST_STATUS_DETAILS[SUCCESS]['code']
@@ -1073,7 +1073,6 @@ class UserSmartContractWalletAddressGetCreateUpdateDelete(generics.GenericAPIVie
 
         try:
             request_data = dict()
-            print(self.request.data)
             user_id = self.request.user.id
             request_data['user'] = user_id
 
@@ -1095,7 +1094,7 @@ class UserSmartContractWalletAddressGetCreateUpdateDelete(generics.GenericAPIVie
 
             request_data['blockchain_network'] = blockchain_network_qs[0].id
 
-            user_wallet_address = request.data.get('userEOAWalletAddress', None)
+            user_wallet_address = request.data.get('user_wallet_address', None)
             if not user_wallet_address:
                 response['message'] = 'User wallet address is missing'
                 response['status'] = FAIL
@@ -1103,7 +1102,7 @@ class UserSmartContractWalletAddressGetCreateUpdateDelete(generics.GenericAPIVie
                 response['error'] = API_REQUEST_STATUS_DETAILS[FAIL]['details'][INVALID_REQUEST_BODY]["name"]
                 return Response(response, status=status.HTTP_400_BAD_REQUEST)
 
-            user_sc_wallet_address = request.data.get('userSmartContractWalletAddress', None)
+            user_sc_wallet_address = request.data.get('user_smart_contract_wallet_address', None)
             if not user_sc_wallet_address:
                 response['message'] = 'User Smart Contract Wallet Address is missing'
                 response['status'] = FAIL
@@ -1114,7 +1113,7 @@ class UserSmartContractWalletAddressGetCreateUpdateDelete(generics.GenericAPIVie
             request_data['user_wallet_address'] = user_wallet_address
             request_data['user_smart_contract_wallet_address'] = user_sc_wallet_address
 
-            serializer = self.serializer_class(data=request.data)
+            serializer = self.serializer_class(data=request_data)
 
             if serializer.is_valid():
                 serializer.save()
@@ -1123,7 +1122,7 @@ class UserSmartContractWalletAddressGetCreateUpdateDelete(generics.GenericAPIVie
                 response_data['user'] = serializer.data.get('user', None)
                 response_data['created_at'] = serializer.data.get('created_at', None)
                 response_data['modified_at'] = serializer.data.get('modified_at', None)
-                response_data['chain_id'] = request.data.get('chain_d', None)
+                response_data['chain_id'] = request.data.get('chain_id', None)
                 response_data['user_wallet_address'] = serializer.data.get('user_wallet_address', None)
                 response_data['user_smart_contract_wallet_address'] = serializer.data.get('user_smart_contract_wallet_address', None)
 
