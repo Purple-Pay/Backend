@@ -22,9 +22,10 @@ class UserTypeSerializer(serializers.ModelSerializer):
 
 class UserSmartContractWalletAddressSerializer(serializers.ModelSerializer):
     id = serializers.UUIDField(read_only=True)
+    created_at = serializers.DateTimeField(read_only=True)
+    modified_at = serializers.DateTimeField(read_only=True)
     user = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
     blockchain_network = serializers.PrimaryKeyRelatedField(queryset=BlockchainNetwork.objects.all())
-
 
     class Meta:
         model = UserSmartContractWalletAddress
@@ -36,6 +37,7 @@ class WebhookSerializer(serializers.ModelSerializer):
     created_at = serializers.DateTimeField(read_only=True)
     modified_at = serializers.DateTimeField(read_only=True)
     user = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
+    secret_key = serializers.CharField(read_only=True)
 
     class Meta:
         model = Webhook

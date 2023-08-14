@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/4.1/ref/settings/
 
 from pathlib import Path
 import os
+from corsheaders.defaults import default_headers
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -22,11 +23,8 @@ TEMP_BASE_PATH = Path(__file__).resolve().parent.parent.parent
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
 
 AUTH_USER_MODEL = 'authentication.User'
-
-CORS_ALLOW_HEADERS = ['nonce', 'timestamp', 'signature', 'apiKey', 'accept',
-                      'accept-encoding', 'authorization',
-                      'content-type', 'dnt', 'origin', 'user-agent', 'x-csrftoken',
-                      'x-requested-with']
+print('default_headers', default_headers)
+CORS_ALLOW_HEADERS = [*default_headers, 'nonce', 'timestamp', 'signature', 'apiKey', ]
 
 CSRF_TRUSTED_ORIGINS = ['https://*.purplepay.app', ]
 CORS_ALLOW_ALL_ORIGINS = True

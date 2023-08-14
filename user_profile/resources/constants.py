@@ -10,3 +10,19 @@ CREATE_USER_SMART_CONTRACT_WALLET_FAIL = "Uh-oh! Your smart contract wallet crea
 
 WEBHOOK_URL_STATUS = ['ACTIVE', 'INACTIVE']
 WEBHOOK_EVENT_TYPE = ['SUCCESS', 'FAIL']
+
+MERCHANT = "MERCHANT"
+INDIVIDUAL = "INDIVIDUAL"
+NA = "NA"
+USER_TYPES_DB_TO_API = {
+    "merchant": MERCHANT,
+    "Merhcant": MERCHANT,
+    "individual": INDIVIDUAL,
+    "NA": NA
+}
+
+USER_TYPES_API_TO_DB_REVERSE = {
+    MERCHANT: "merchant",
+    NA: "NA",
+    INDIVIDUAL: "INDIVIDUAL"
+}

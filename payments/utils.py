@@ -11,6 +11,9 @@ from .resources.constants import (ASHARAN_POLYGONSCAN_API_KEY, ASHARAN_ETHERSCAN
                                   BLOCKEXPLORER_URLS, RPC_ENDPOINTS,
                                   DEPLOY_STATUS_INITIATED_DEPLOY, DEPLOY_STATUS_FAILURE_DEPLOY,
                                   DEPLOY_STATUS_SUCCESS_DEPLOY, DEPLOY_STATUS_NOT_DEPLOY)
+from commons.utils import generate_nonce, generate_timestamp, generate_webhook_signature, generate_signature
+from user_profile.models import Webhook, WebhookActivity
+from user_profile.serializers import WebhookActivitySerializer
 
 
 def print_statement_with_line(module, line, variable_name, variable, delimiter="*"):
@@ -192,6 +195,8 @@ def deploy_and_disburse(burner_address_instance, token_instance,
         print(f'Transaction hash: {txn_hash.hex()}')
         print("*" * 100)
 
+        # if txn_receipt - second webhook call - successful disbursal/settlement
+
         payment_burner_address_obj.burner_contract_deploy_status = DEPLOY_STATUS_SUCCESS_DEPLOY
         payment_burner_address_obj.transfer_to_merchant_transaction_hash = txn_hash.hex()
         payment_burner_address_obj.burner_contract_deploy_failure_reason = None
@@ -205,6 +210,58 @@ def deploy_and_disburse(burner_address_instance, token_instance,
         payment_burner_address_obj.save()
         print(e)
         return str(e)
+
+
+def call_webhook(webhook_obj, payment_burner_obj, payment_id, payment_status_completed):
+    try:
+        webhook_url_success = webhook_obj.url
+        secret_key = webhook_obj.secret_key
+
+        if webhook_url_success and secret_key:
+            payload = dict()
+            payload['merchantOrderId'] = payment_burner_obj.user_order_id
+            payload['purplePayPaymentId'] = payment_id
+            payload["transactionStatus"] = payment_status_completed
+            payload["transactionHash"] = payment_burner_obj.transaction_hash
+
+            signature_dict = generate_webhook_signature(payload, secret_key)
+
+            # Add to body
+            payload['timestamp'] = signature_dict['timestamp']
+            payload['nonce'] = signature_dict['nonce']
+            payload['signature'] = signature_dict['signature']
+
+            webhook_response = requests.post(url=webhook_url_success, json=payload)
+
+            # Save into WebhookActivity
+            webhook_activity_data = dict()
+            if webhook_response.status_code == 200:
+                webhook_activity_data['latest_interaction_type'] = "SUCCESS"
+            else:
+                webhook_activity_data['latest_interaction_type'] = "FAIL"
+
+            webhook_activity_data['webhook_id'] = webhook_obj.id
+            webhook_activity_data['request_timestamp_in_unix_ms'] = signature_dict['timestamp']
+            webhook_activity_data['request_nonce'] = signature_dict['nonce']
+            webhook_activity_data['request_signature'] = signature_dict['signature']
+            webhook_activity_data['request_payload'] = payload
+            webhook_activity_data['delivery_response_body'] = webhook_response.text[0:999]
+            webhook_activity_data['delivery_response_status_code'] = str(webhook_response.status_code)
+
+            webhook_serializer = WebhookActivitySerializer(data=webhook_activity_data)
+            if webhook_serializer.is_valid():
+                webhook_serializer.save()
+
+    except Exception as e:
+        print(str(e))
+        return str(e)
+
+
+def start_webhook_thread(fn_name, kwarg_dict):
+    print_statement_with_line('utils', 205, 'kwarg_dict', kwarg_dict)
+    t = threading.Thread(target=fn_name, args=(), kwargs=kwarg_dict)
+    t.setDaemon(True)
+    t.start()
 
 
 def start_thread_to_deploy_and_disburse(fn_name, kwarg_dict):

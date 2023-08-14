@@ -6,13 +6,13 @@ from .views import (
     PaymentList, PaymentFilter,
     PaymentBurnerAddressGetCreateUpdate3, PaymentBurnerAddressVerifyDetail4,
     PaymentBurnerAddressSampleGetCreateUpdate, PaymentBurnerAddressSampleVerifyDetail,
-    ChainConfigGet, PaymentConfig, PaymentListExternal, PaymentFilterExternal
+    ChainConfigGet, PaymentConfig, PaymentListExternal, PaymentFilterExternal,
+    PaymentBurnerAddressGetCreateUpdateExternalV1, PaymentBurnerAddressVerifyDetailExternalV1
 )
 from django.views.decorators.csrf import csrf_exempt
 
 from django.urls import path
 from .views import ChainConfigGet
-
 
 urlpatterns = [
     path('chain_config/', ChainConfigGet.as_view(), name='chain_config_get'),
@@ -27,13 +27,15 @@ urlpatterns = [
 
     path('list/', PaymentList.as_view(), name='payment_list'),
     path('filter/', PaymentFilter.as_view(), name='payment_filter'),
-    path('all/', PaymentListExternal.as_view(), name='payment_list_external'),
-    path('dateFilter/', PaymentFilterExternal.as_view(), name='payment_filter_external'),
+    path('v2/list/', PaymentListExternal.as_view(), name='payment_list_external'),
+    path('v2/filter/', PaymentFilterExternal.as_view(), name='payment_filter_external'),
 
     path('burner_address/', csrf_exempt(PaymentBurnerAddressGetCreateUpdate3.as_view()),
          name='burner_payment_get_create_update'),
     path('burner_address/payment_verify/<str:payment_id>', PaymentBurnerAddressVerifyDetail4.as_view(),
          name='payment_burner_address_verify_detail'),
+    path('checkout/', csrf_exempt(PaymentBurnerAddressGetCreateUpdateExternalV1.as_view()),
+         name='checkout_get_create_update'),
     path('burner_address/sample/', csrf_exempt(PaymentBurnerAddressSampleGetCreateUpdate.as_view()),
          name='burner_payment_sample_get_create_update'),
     path('burner_address/sample/payment_verify/<str:payment_id>', PaymentBurnerAddressSampleVerifyDetail.as_view(),

@@ -43,6 +43,7 @@ class User(AbstractBaseUser, PrimaryUUIDTimeStampedModel, PermissionsMixin):
     is_staff = models.BooleanField(default=False)
     is_superuser = models.BooleanField(default=False)  # Only single superuser
     is_verified = models.BooleanField(default=False)
+    is_approved = models.BooleanField(default=False)
     auth_provider = models.CharField(max_length=255, blank=False,
                                      null=False, default=AUTH_PROVIDERS.get('email'))
 

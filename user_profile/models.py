@@ -15,14 +15,14 @@ class UserType(PrimaryUUIDTimeStampedModel):
 
 
 class UserProfile(PrimaryUUIDTimeStampedModel):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="user_profile")
+    user = models.OneToOneField(User, on_delete=models.SET_NULL, blank=True, null=True, related_name="user_profile")
     profile_image = models.TextField(_('profile image'), max_length=300, blank=True, null=True)
     first_name = models.CharField(_('first name'), max_length=30, blank=True, null=True)
     middle_name = models.CharField(_('middle name'), max_length=30, blank=True, null=True)
     last_name = models.CharField(_('last name'), max_length=150, blank=True, null=True)
     location = models.CharField(_('location'), max_length=100, blank=True, null=True)
     company = models.CharField(_('company'), max_length=100, blank=True, null=True)
-    user_type = models.ForeignKey(UserType, on_delete=models.CASCADE, related_name="user_profiles")
+    user_type = models.ForeignKey(UserType, on_delete=models.SET_NULL, related_name="user_profiles", blank=True, null=True)
     agreed_terms_and_conditions = models.BooleanField(default=False)
     agreed_privacy_policy = models.BooleanField(default=False)
     user_wallet_address = models.CharField(_('wallet_address'), max_length=300, blank=True, null=True)
@@ -44,6 +44,10 @@ class UserSmartContractWalletAddress(PrimaryUUIDTimeStampedModel):
     blockchain_network = models.ForeignKey(BlockchainNetwork, on_delete=models.CASCADE,
                                            related_name="user_scw_addresses",
                                            blank=True, null=True)
+    # user_wallet_address_status - ACTIVE | INACTIVE
+    # user_smart_contract_wallet_status - ACTIVE | INACTIVE
+    # user_wallet_provider - Metamask | Obvious | Hardware
+    # user_smart_contract_wallet_provider - Biconomy | Banana
 
     def __str__(self):
         return f"Id::{str(self.id)}::::UserId::{str(self.user)}"
@@ -65,15 +69,12 @@ class Webhook(PrimaryUUIDTimeStampedModel):
 
 class WebhookActivity(PrimaryUUIDTimeStampedModel):
     webhook_id = models.ForeignKey(Webhook, on_delete=models.SET_NULL, blank=True, null=True, related_name="webhookactivity")
-    latest_interaction = models.DateTimeField(auto_now=True)
     latest_interaction_type = models.CharField(_('latest interaction type'), max_length=64, blank=True, null=True)    # 'SUCCESS', 'FAIL'
     delivery_response_body = models.CharField(_('webhook delivery response'), max_length=1024, blank=True, null=True)
     delivery_response_status_code = models.CharField(_('webhook delivery response status'), max_length=64, blank=True, null=True)
     error_log = models.TextField(blank=True, null=True)
-
-
-
-
-
-
+    requestTimestampInUnixMs = models.BigIntegerField(verbose_name="Timestamp in Unix ms", null=True, blank=True)
+    requestNonce = models.CharField(_('Request Nonce'), max_length=512, blank=True, null=True)
+    requestSignature = models.CharField(_('Request Signature'), max_length=1024, blank=True, null=True)
+    requestPayload = models.JSONField(verbose_name="Request Payload", null=True, blank=True, default=dict)
 

@@ -84,10 +84,18 @@ COINGECKO_EXCHANGE_RATE_VS_1USD_URL = "https://api.coingecko.com/api/v3/simple/p
 MAINNET = 'mainnet'
 TESTNET = 'testnet'
 
+
+ECOMMERCE = 'ECOMMERCE'
+ONE_TIME_PAYMENT = 'ONE_TIME_PAYMENT'
+SCAN_AND_PAY = 'SCAN_AND_PAY'
+P2P = 'P2P'
+NA = 'NA'
+
 PAYMENT_TYPES = ['ecommerce', 'one time payment', 'scan and pay', 'p2p']
-DEVICE_TYPES = ["app", "web", "wap", "others"]
-OS_TYPES = ['android', 'ios', 'windows', 'linux', 'others']
-USDOLLAR = 'usd'
+PAYMENT_TYPES_V2 = [ECOMMERCE, ONE_TIME_PAYMENT, SCAN_AND_PAY, P2P]
+DEVICE_TYPES = ["APP", "WEB", "WAP", "OTHERS"]
+OS_TYPES = ['ANDROID', 'IOS', 'WINDOWS', 'LINUX', 'OTHERS']
+USDOLLAR = 'USD'
 PAYMENT_TYPES_MAPPING = {
     'ecommerce': 'merchant ecommerce',
     'one time payment': 'one time',
@@ -95,6 +103,15 @@ PAYMENT_TYPES_MAPPING = {
     'p2p': 'p2p',
     'na': 'na'
 }
+
+PAYMENT_TYPES_MAPPING_V2 = {
+    ECOMMERCE: 'merchant ecommerce',
+    ONE_TIME_PAYMENT: 'one time',
+    SCAN_AND_PAY: 'merchant pos',
+    P2P: 'p2p',
+    NA: 'na'
+}
+
 PAYMENT_TYPES_DB_TO_ENUM_MAPPING = {
     'merchant ecommerce': 'ecommerce',
     'one time': 'one time payment',
@@ -102,4 +119,13 @@ PAYMENT_TYPES_DB_TO_ENUM_MAPPING = {
     'p2p': 'p2p',
     'na': 'na'
 }
+
+PAYMENT_TYPES_DB_TO_ENUM_MAPPING_V2 = {
+    'merchant ecommerce': ECOMMERCE,
+    'one time': ONE_TIME_PAYMENT,
+    'merchant pos': SCAN_AND_PAY,
+    'p2p': P2P,
+    'na': NA
+}
+
 CHAIN_IDS = ['80001', '81', '137', '592']
