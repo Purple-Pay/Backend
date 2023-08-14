@@ -1,6 +1,9 @@
 import secrets
 import hashlib
 import hmac
+import uuid
+import time
+from datetime import datetime
 
 
 def method_permission_classes(classes):
@@ -47,7 +50,7 @@ def generate_signature(payload, secret_key):
 def verify_signature(payload, secret_key, received_signature):
     expected_signature = generate_signature(payload, secret_key)
     print("*" * 100)
-    print("Recevied Signature: ", received_signature)
+    print("Received Signature: ", received_signature)
     print("*" * 100)
     print("Expected Signature: ", expected_signature)
     print('Payload:', payload)
@@ -56,9 +59,42 @@ def verify_signature(payload, secret_key, received_signature):
     return expected_signature == received_signature
 
 
+def generate_checkout_id():
+    # Search merchant
+
+    timestamp = int(time.time() * 1000)
+    random_chars = str(uuid.uuid4().hex)[:6]
+    checkout_id = f"{timestamp}_{random_chars}"
+
+    return checkout_id
 
 
+# # Generate a unique checkout ID
+# checkout_id = generate_checkout_id()
+# print("Generated Checkout ID:", checkout_id)
 
 
+def generate_timestamp():
+    timestamp = datetime.now()
+    unix_timestamp_ms = int(timestamp.timestamp() * 1000)
+    return unix_timestamp_ms
+
+
+def generate_nonce():
+    nonce_length_bytes = 16  # Adjust the length as needed
+
+    # Generate a random nonce as a hexadecimal string
+    random_nonce = secrets.token_hex(nonce_length_bytes)
+    return random_nonce
+
+
+def generate_webhook_signature(request_payload, secret_key):
+    timestamp = generate_timestamp()
+    nonce = generate_nonce()
+    signature_payload = f"{timestamp}\n{nonce}\n{request_payload}\n"
+    signature = generate_signature(signature_payload, secret_key)
+    print(signature)
+    result = dict(signature=signature, timestamp=timestamp, signature_payload=signature_payload, nonce=nonce)
+    return result
 
 
