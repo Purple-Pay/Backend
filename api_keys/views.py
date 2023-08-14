@@ -78,7 +78,7 @@ class APIKeyGetCreateUpdate(generics.GenericAPIView):
                 data["created_at"] = element.get("created_at", None)
                 data["modified_at"] = element.get("modified_at", None)
                 data["key_name"] = element.get("key_name", None)
-                data["status"] = element.get("status", None)
+                data["status"] = element.get("api_key_status", None)
                 response_data.append(data)
 
             response['data'] = response_data
@@ -134,7 +134,8 @@ class APIKeyGetCreateUpdate(generics.GenericAPIView):
             request_data = dict()
             request_data['user'] = user_id
             request_data['key_name'] = self.request.data.get('key_name', None)
-            request_data['status'] = self.request.data.get('status', None)    # ACTIVE, INACTIVE
+            request_data['api_key_status'] = self.request.data.get('status', None)    # ACTIVE, INACTIVE
+            print(request_data)
 
             secret_key = generate_secret_for_api_key()
 
@@ -152,7 +153,7 @@ class APIKeyGetCreateUpdate(generics.GenericAPIView):
                 response_data['created_at'] = db_data.get('created_at', None)
                 response_data['modified_at'] = db_data.get('modified_at', None)
                 response_data['key_name'] = db_data.get('key_name', None)
-                response_data['status'] = db_data.get('status', None)  # ACTIVE, INACTIVE
+                response_data['status'] = db_data.get('api_key_status', None)  # ACTIVE, INACTIVE
 
                 # Prepare response
                 response['data'] = response_data
@@ -240,7 +241,7 @@ class APIKeyGetCreateUpdate(generics.GenericAPIView):
             if 'key_name' in self.request.data:
                 request_data['key_name'] = request.data.get('key_name', None)
             if 'status' in self.request.data:
-                request_data['status'] = request.data.get('status', None)  # ACTIVE, INACTIVE
+                request_data['api_key_status'] = request.data.get('status', None)  # ACTIVE, INACTIVE
             request_data['user'] = user_id
 
             api_key_obj = api_key_qs[0]
@@ -254,7 +255,7 @@ class APIKeyGetCreateUpdate(generics.GenericAPIView):
                 response_data['created_at'] = api_key_serializer.data.get('created_at', None)
                 response_data['modified_at'] = api_key_serializer.data.get('modified_at', None)
                 response_data['secret_key'] = api_key_serializer.data.get('secret_key', None)
-                response_data['status'] = api_key_serializer.data.get('status', None)
+                response_data['status'] = api_key_serializer.data.get('api_key_status', None)
                 response_data['key_name'] = api_key_serializer.data.get('key_name', None)
 
                 print(response_data)

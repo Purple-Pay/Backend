@@ -1077,7 +1077,7 @@ class UserSmartContractWalletAddressGetCreateUpdateDelete(generics.GenericAPIVie
             user_id = self.request.user.id
             request_data['user'] = user_id
 
-            chain_id = request.data.get('chainId', None)
+            chain_id = request.data.get('chain_id', None)
             if not chain_id:
                 response['message'] = 'Chain id is missing'
                 response['status'] = FAIL
