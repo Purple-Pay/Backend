@@ -71,7 +71,7 @@ class UserProfileGetCreateUpdateDelete(generics.GenericAPIView):
                     "error": ""
                 }
         """
-        response = dict(data=list(), message="", status="", code="", error="")
+        response = dict(data=dict(), message="", status="", code="", error="")
 
         try:
             user_id = self.request.user.id
@@ -121,7 +121,7 @@ class UserProfileGetCreateUpdateDelete(generics.GenericAPIView):
                 data['email'] = user_obj.email
                 response_data.append(data)
 
-            response['data'] = response_data
+            response['data'] = response_data[0]
             response['message'] = GET_PROFILE_SUCCESS
             response['status'] = SUCCESS
             response['code'] = API_REQUEST_STATUS_DETAILS[SUCCESS]['code']
@@ -133,7 +133,7 @@ class UserProfileGetCreateUpdateDelete(generics.GenericAPIView):
             data = {'id': None}
             response_data.append(data)
 
-            response['data']['userProfileList'] = response_data
+            response['data'] = response_data[0]
             response['message'] = API_REQUEST_STATUS_DETAILS[INVALID_REQUEST]['name']
             response['status'] = FAIL
             response['code'] = API_REQUEST_STATUS_DETAILS[INVALID_REQUEST]['code']
@@ -993,7 +993,7 @@ class UserSmartContractWalletAddressGetCreateUpdateDelete(generics.GenericAPIVie
                     "error": ""
                 }
         """
-        response = dict(data=dict(smartContractWalletAddressList=list()), message="", status="", code="", error="")
+        response = dict(data=list(), message="", status="", code="", error="")
         try:
             user_id = self.request.user.id
             queryset = UserSmartContractWalletAddress.objects.filter(user=user_id)
@@ -1005,10 +1005,10 @@ class UserSmartContractWalletAddressGetCreateUpdateDelete(generics.GenericAPIVie
                 data = dict()
                 data["id"] = element.get("id", None)
                 data["user"] = element.get("user", None)
-                data["createdAt"] = element.get("created_at", None)
-                data["modifiedAt"] = element.get("modified_at", None)
-                data["userEOAWalletAddress"] = element.get("user_wallet_address", None)
-                data["userSmartContractWalletAddress"] = element.get("user_smart_contract_wallet_address", None)
+                data["created_at"] = element.get("created_at", None)
+                data["modified_at"] = element.get("modified_at", None)
+                data["user_wallet_address"] = element.get("user_wallet_address", None)
+                data["user_smart_contract_wallet_address"] = element.get("user_smart_contract_wallet_address", None)
 
                 blockchain_network = element.get('blockchain_network', None)
                 chain_id = None
@@ -1019,7 +1019,7 @@ class UserSmartContractWalletAddressGetCreateUpdateDelete(generics.GenericAPIVie
                 data['chainId'] = chain_id
                 response_data.append(data)
 
-            response['data']['smartContractWalletAddressList'] = response_data
+            response['data'] = response_data
             response['message'] = "Wallet Addresses successfully fetched for the user"
             response['status'] = SUCCESS
             response['code'] = API_REQUEST_STATUS_DETAILS[SUCCESS]['code']
@@ -1069,7 +1069,7 @@ class UserSmartContractWalletAddressGetCreateUpdateDelete(generics.GenericAPIVie
                     "error": ""
                     }
         """
-        response = dict(data=dict(walletAddress=dict()), message="", status="", code="", error="")
+        response = dict(data=dict(), message="", status="", code="", error="")
 
         try:
             request_data = dict()
@@ -1121,12 +1121,13 @@ class UserSmartContractWalletAddressGetCreateUpdateDelete(generics.GenericAPIVie
                 response_data = dict()
                 response_data['id'] = serializer.data.get('id', None)
                 response_data['user'] = serializer.data.get('user', None)
-                response_data['createdAt'] = serializer.data.get('created_at', None)
-                response_data['modifiedAt'] = serializer.data.get('modified_at', None)
-                response_data['chainId'] = request.data.get('chainId', None)
-                response_data['userEOAWalletAddress'] = serializer.data.get('userEOAWalletAddress', None)
+                response_data['created_at'] = serializer.data.get('created_at', None)
+                response_data['modified_at'] = serializer.data.get('modified_at', None)
+                response_data['chain_id'] = request.data.get('chain_d', None)
+                response_data['user_wallet_address'] = serializer.data.get('user_wallet_address', None)
+                response_data['user_smart_contract_wallet_address'] = serializer.data.get('user_smart_contract_wallet_address', None)
 
-                response['data']['walletAddress'] = response_data
+                response['data'] = response_data
                 response['message'] = CREATE_USER_SMART_CONTRACT_WALLET_SUCCESS
                 response['status'] = SUCCESS
                 response['code'] = API_REQUEST_STATUS_DETAILS[SUCCESS]['code']
