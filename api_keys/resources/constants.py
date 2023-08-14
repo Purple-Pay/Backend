@@ -8,3 +8,5 @@ DELETE_API_KEY_FAIL = "Aw, shucks! We tried to make your API key vanish, but it'
 API_KEY_INVALID = "Hmm, your API key seems to be throwing a tantrum. It's not valid, I'm afraid."
 USER_PROFILE_SUCCESS_FOUND = "Huzzah! We found your profile. It's waiting eagerly to say hello!"
 USER_PROFILE_FAIL_NOT_FOUND = "Oh, where, oh, where has your user profile gone? We can't seem to find it."
+
+
