@@ -129,6 +129,9 @@ class PaymentBurner(PrimaryUUIDTimeStampedModel):
     blockchain_network = models.ForeignKey(BlockchainNetwork, on_delete=models.CASCADE, related_name="payment_burners",
                                            blank=True, null=True)
     description = models.CharField(_('Description'), max_length=512, blank=True, null=True)
+    # checkout_url = models.CharField(_('checkout url'), max_length=1024, blank=True, null=True)
+    # success_redirect_url = models.CharField(_('success redirect url'), max_length=1024, blank=True, null=True)
+    # failure_redirect_url = models.CharField(_('failure redirect url'), max_length=1024, blank=True, null=True)
 
     def __str__(self):
         return f"PaymentId::{str(self.id)}::::UserOrderId::{str(self.user_order_id)}"

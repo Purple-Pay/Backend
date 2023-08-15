@@ -6,3 +6,23 @@ DELETE_PROFILE_SUCCESS = "Voila! Your profile has been deleted. It's taken a one
 DELETE_PROFILE_FAIL = "Drats! We tried to delete your profile, but it refused to go quietly."
 CREATE_USER_SMART_CONTRACT_WALLET_SUCCESS = "Huzzah! You've successfully created a smart contract wallet. Time to join the blockchain gang!"
 CREATE_USER_SMART_CONTRACT_WALLET_FAIL = "Uh-oh! Your smart contract wallet creation failed. Time for another run-up?"
+
+
+WEBHOOK_URL_STATUS = ['ACTIVE', 'INACTIVE']
+WEBHOOK_EVENT_TYPE = ['SUCCESS', 'FAIL']
+
+MERCHANT = "MERCHANT"
+INDIVIDUAL = "INDIVIDUAL"
+NA = "NA"
+USER_TYPES_DB_TO_API = {
+    "merchant": MERCHANT,
+    "Merhcant": MERCHANT,
+    "individual": INDIVIDUAL,
+    "NA": NA
+}
+
+USER_TYPES_API_TO_DB_REVERSE = {
+    MERCHANT: "merchant",
+    NA: "NA",
+    INDIVIDUAL: "INDIVIDUAL"
+}

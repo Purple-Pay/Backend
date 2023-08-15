@@ -8,6 +8,8 @@ from django.utils.translation import gettext_lazy as _
 class APIKey(PrimaryUUIDTimeStampedModel):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="api_keys")
     key_name = models.CharField(_('API Key Name'), max_length=512, blank=True, null=True)
+    secret_key = models.CharField(_('API Secret Key'), max_length=1024, blank=True, null=True)
+    api_key_status = models.CharField(_("API Key Status"), max_length=50, blank=True, null=True)    # ACTIVE, INACTIVE
 
     def __str__(self):
         return f"APIKey::{str(self.id)}::::UserId::{str(self.user)}"

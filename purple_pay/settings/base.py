@@ -12,18 +12,27 @@ https://docs.djangoproject.com/en/4.1/ref/settings/
 
 from pathlib import Path
 import os
+from corsheaders.defaults import default_headers
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-#print(Path(__file__).resolve().parent.parent.parent)
+# print(Path(__file__).resolve().parent.parent.parent)
 TEMP_BASE_PATH = Path(__file__).resolve().parent.parent.parent
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
 
 AUTH_USER_MODEL = 'authentication.User'
-CSRF_TRUSTED_ORIGINS = ['https://*.purplepay.app']
+print('default_headers', default_headers)
+CORS_ALLOW_HEADERS = [*default_headers, 'nonce', 'timestamp', 'signature', 'apiKey', ]
+
+CSRF_TRUSTED_ORIGINS = ['https://*.purplepay.app', ]
 CORS_ALLOW_ALL_ORIGINS = True
+# CORS_ALLOWED_ORIGINS = ['https://*.purplepay.app', 'http://localhost:3000']
+# purplepay_regex = r"^https://([\w-]+\.)*purplepay\.app(/[\w-]+)*(\?.*)?$"
+# localhost_regex = "^https://([\w-]+\.)*localhost:3000(/[\w-]+)*(\?.*)?$"
+#
+# CORS_ALLOWED_ORIGIN_REGEXES = [purplepay_regex, localhost_regex, ]
 
 # Application definition
 
@@ -50,7 +59,7 @@ ROOT_URLCONF = 'purple_pay.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(TEMP_BASE_PATH,'authentication','email')],
+        'DIRS': [os.path.join(TEMP_BASE_PATH, 'authentication', 'email')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -64,7 +73,7 @@ TEMPLATES = [
 ]
 
 STATICFILES_DIRS = [
-    os.path.join(TEMP_BASE_PATH,'authentication','email')
+    os.path.join(TEMP_BASE_PATH, 'authentication', 'email')
 ]
 
 WSGI_APPLICATION = 'purple_pay.wsgi.application'
@@ -126,4 +135,3 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
-
