@@ -1396,11 +1396,15 @@ class PaymentBurnerAddressVerifyDetail4(generics.GenericAPIView):
                     # print("payment_burner_address_obj.order_amount::", payment_burner_address_obj.order_amount)
                     # print("in 10^decimals", payment_burner_address_obj.order_amount * (
                     #         10 ** token_instance.decimals))
+                    # print("in 10^decimals roundedd::", int(round(payment_burner_address_obj.order_amount * (
+                    #         10 ** token_instance.decimals), token_instance.decimals)))
                     # print("amount_in_burner_address::", amount_in_burner_address)
                     # print("#" * 200)
                     # print("#" * 200)
-                    if payment_burner_address_obj.order_amount * (
-                            10 ** token_instance.decimals) <= amount_in_burner_address:
+                    payment_burner_address_obj_order_amount = int(round(payment_burner_address_obj.order_amount * (
+                            10 ** token_instance.decimals), token_instance.decimals))
+
+                    if payment_burner_address_obj_order_amount <= amount_in_burner_address:
                         payment_completed_in_burner_address_flag = True
 
                         print("The specific payment_burner_address of burner_address table")
@@ -2042,8 +2046,9 @@ class PaymentBurnerAddressVerifyDetailExternalV1(generics.GenericAPIView):
                                                                               erc20_token_abi,
                                                                               blockchain_network.chain_id)
 
-                    if payment_burner_address_obj.order_amount * (
-                            10 ** token_instance.decimals) <= amount_in_burner_address:
+                    payment_burner_address_obj_order_amount = int(round(payment_burner_address_obj.order_amount * (
+                            10 ** token_instance.decimals), token_instance.decimals))
+                    if payment_burner_address_obj_order_amount <= amount_in_burner_address:
                         payment_completed_in_burner_address_flag = True
 
                         print("The specific payment_burner_address of burner_address table")
@@ -2574,7 +2579,7 @@ class PaymentBurnerAddressSampleVerifyDetail(generics.GenericAPIView):
                     token_type = token_instance.currency_type.name.lower()
                     token_address = token_instance.token_address_on_network
 
-                    print("LINE 1926", "::token_instance::", token_instance)
+                    # print("LINE 1926", "::token_instance::", token_instance)
 
                     # fetch balance of given address
                     if token_instance.currency_type.name.lower() == 'native':
@@ -2584,12 +2589,13 @@ class PaymentBurnerAddressSampleVerifyDetail(generics.GenericAPIView):
                         amount_in_burner_address = get_burner_address_balance(burner_address, token_instance,
                                                                               erc20_token_abi,
                                                                               blockchain_network.chain_id)
-                    print("LINE 1931")
-                    if payment_burner_address_obj.order_amount * (
-                            10 ** token_instance.decimals) <= amount_in_burner_address:
+                    # print("LINE 1931")
+                    payment_burner_address_obj_order_amount = int(round(payment_burner_address_obj.order_amount * (
+                            10 ** token_instance.decimals), token_instance.decimals))
+                    if payment_burner_address_obj_order_amount <= amount_in_burner_address:
                         payment_completed_in_burner_address_flag = True
 
-                        print("The specific payment_burner_address of burner_address table")
+                        # print("The specific payment_burner_address of burner_address table")
                         # for the given payment Id is updated
                         payment_burner_address_update_data = {"is_used_for_payment": True,
                                                               "payment_status": payment_status_completed.id}
