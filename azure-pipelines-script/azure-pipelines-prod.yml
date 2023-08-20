@@ -1,0 +1,47 @@
+# Starter pipeline
+trigger:
+- production
+
+resources:
+- repo: self
+
+jobs:
+- job: PurplePay_Production
+  displayName: 'PurplePay Prod build'
+
+  pool:
+    name: 'purplepay-agent'
+
+  variables:
+  - group: 'Build Prod Configuration'
+
+  steps:
+  - script: echo $(Build.BuildNumber)
+    displayName: 'Print New build Version'
+
+  - script: echo $(Build.BuildNumber) > VERSION
+    displayName: 'create Version artifact'
+
+  - script: docker login -u $(DOCKER_USER) -p $(DOCKER_PASS) $(DOCKER_REPO)
+    displayName: 'docker login'
+
+  - script: docker build -t $(STAGE)/$(IMAGE_NAME):$(Build.BuildNumber) .
+    displayName: 'docker build image'
+
+  - script: docker tag $(STAGE)/$(IMAGE_NAME):$(Build.BuildNumber) $(DOCKER_REPO)/$(STAGE)/$(IMAGE_NAME):$(IMAGE_TAG)
+    displayName: 'docker tag image to latest'
+
+  - script: docker push $(DOCKER_REPO)/$(STAGE)/$(IMAGE_NAME):$(IMAGE_TAG)
+    displayName: 'docker latest tag image push into container registry'
+
+  - script: docker tag $(STAGE)/$(IMAGE_NAME):$(Build.BuildNumber) $(DOCKER_REPO)/$(STAGE)/$(IMAGE_NAME):$(Build.BuildNumber)
+    displayName: 'docker tag image to current version'
+
+  - script: docker push $(DOCKER_REPO)/$(STAGE)/$(IMAGE_NAME):$(Build.BuildNumber)
+    displayName: 'docker current version image push into container registry'
+
+  - task: PublishBuildArtifacts@1
+    displayName: 'Publish Artifact: VERSION'
+    inputs:
+      PathtoPublish: '$(System.DefaultWorkingDirectory)/VERSION'
+      artifactName: drop-build-repo-version

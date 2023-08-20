@@ -311,7 +311,7 @@ class APIKeyDelete(generics.DestroyAPIView):
                     "error": ""
                 }
         """
-        response = dict(data=dict(apiKey=dict()), message="", error="")
+        response = dict(data=dict(), message="", error="")
 
         try:
             api_key = self.kwargs.get('api_key', None)
@@ -337,7 +337,7 @@ class APIKeyDelete(generics.DestroyAPIView):
                 api_key_obj = api_key_qs[0]
                 api_key_obj.delete()
 
-                response['data']["apiKey"] = {"id": api_key}
+                response['data'] = {"id": api_key, "deleted": True}
                 response['message'] = f'{api_key} has been deleted'
                 response['status'] = SUCCESS
                 response['code'] = API_REQUEST_STATUS_DETAILS[SUCCESS]['code']
