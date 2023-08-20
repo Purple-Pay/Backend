@@ -1,19 +1,19 @@
 # Starter pipeline
 trigger:
-- staging
+- production
 
 resources:
 - repo: self
 
 jobs:
-- job: PurplePay_Sit
-  displayName: 'PurplePay sit build'
+- job: PurplePay_Production
+  displayName: 'PurplePay Prod build'
 
   pool:
     name: 'purplepay-agent'
-  
+
   variables:
-  - group: 'Build Sit Configuration'
+  - group: 'Build Prod Configuration'
 
   steps:
   - script: echo $(Build.BuildNumber)
