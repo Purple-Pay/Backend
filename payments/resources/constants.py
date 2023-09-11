@@ -53,6 +53,30 @@ BLOCKEXPLORER_URLS = {
         'block_explorer': 'blockscout',
         'base_url': 'https://blockscout.com/astar/api',
         'api_key': ASHARAN_BLOCKSCOUT_API_KEY
+    },
+    '5001': {
+        'name': 'mantle testnet',
+        'block_explorer': 'blockscout',
+        'base_url': 'https://explorer.testnet.mantle.xyz/api',
+        'api_key': ASHARAN_BLOCKSCOUT_API_KEY
+    },
+'5000': {
+        'name': 'mantle mainnet',
+        'block_explorer': 'mantle explorer',
+        'base_url': 'https://explorer.mantle.xyz/api',
+        'api_key': ASHARAN_BLOCKSCOUT_API_KEY
+    },
+'59144': {
+        'name': 'linea mainnet',
+        'block_explorer': 'blockscout',
+        'base_url': 'https://blockscout.com/astar/api',
+        'api_key': ASHARAN_BLOCKSCOUT_API_KEY
+    },
+'59140': {
+        'name': 'linea testnet',
+        'block_explorer': 'blockscout',
+        'base_url': 'https://blockscout.com/astar/api',
+        'api_key': ASHARAN_BLOCKSCOUT_API_KEY
     }
 }
 
@@ -76,6 +100,22 @@ RPC_ENDPOINTS = {
     '81': {
         'name': 'shibuya',
         'url': "https://evm.shibuya.astar.network"
+    },
+'5000': {
+        'name': 'mantle mainnet',
+        'url': "https://mantle-mainnet.public.blastapi.io"
+    },
+'5001': {
+        'name': 'mantle testnet',
+        'url': "https://rpc.testnet.mantle.xyz"
+    },
+'59144': {
+        'name': 'linea mainnet',
+        'url': "https://linea.blockpi.network/v1/rpc/public"
+    },
+'59140': {
+        'name': 'linea testnet',
+        'url': "https://rpc.goerli.linea.build"
     }
 }
 
