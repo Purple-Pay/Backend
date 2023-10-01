@@ -2,6 +2,7 @@ from purple_pay.settings.base import *
 import os
 import datetime
 from purple_pay.logger_config import LOGGING_SETTING
+from purple_pay.kafka.kafka_config import create_kafka_producer
 
 
 # SECURITY WARNING: keep the secret key used in production secret!
@@ -55,5 +56,6 @@ FILE_UPLOAD_MAX_MEMORY_SIZE = 15728640  # 15 MB
 
 LOGGING = LOGGING_SETTING
 
+#KAFKA_PRODUCER = create_kafka_producer()
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'static'
